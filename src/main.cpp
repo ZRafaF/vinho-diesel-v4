@@ -1,24 +1,18 @@
 #include <Arduino.h>
 
-int led = LED_BUILTIN;
-#include "esp_clk.h"
+// put function declarations here:
+int myFunction(int, int);
 
-void setup()
-{
-    // Some boards work best if we also make a serial connection
-    Serial.begin(115200);
-
-    // set LED to be an output pin
-    pinMode(led, OUTPUT);
-    digitalWrite(led, HIGH); // turn the LED on (HIGH is the voltage level)
+void setup() {
+  // put your setup code here, to run once:
+  int result = myFunction(2, 3);
 }
 
-void loop()
-{
-    uint32_t cpu_freq = esp_clk_cpu_freq();
+void loop() {
+  // put your main code here, to run repeatedly:
+}
 
-    // Say hi!
-    Serial.println(cpu_freq);
-
-    delay(500); // wait for a half second
+// put function definitions here:
+int myFunction(int x, int y) {
+  return x + y;
 }

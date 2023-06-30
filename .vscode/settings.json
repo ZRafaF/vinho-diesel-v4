@@ -1,0 +1,9 @@
+{
+    "cSpell.language": "en,pt-BR",
+    "licenser.author": "Rafael Farias",
+    "licenser.license": "AL2",
+    "licenser.projectName": "Vinho Diesel v4",
+    "licenser.customHeader": "@FILENAME@ - @PROJECT@\n\nCopyright @YEAR@ @AUTHOR@\n\nThis is my license...",
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "prettier.tabWidth": 4
+}
