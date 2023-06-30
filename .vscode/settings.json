@@ -1,9 +1,14 @@
 {
     "cSpell.language": "en,pt-BR",
+    "cSpell.words": ["mplx", "Selec"],
     "licenser.author": "Rafael Farias",
     "licenser.license": "AL2",
     "licenser.projectName": "Vinho Diesel v4",
     "licenser.customHeader": "@FILENAME@ - @PROJECT@\n\nCopyright @YEAR@ @AUTHOR@\n\nThis is my license...",
     "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "prettier.tabWidth": 4
+    "prettier.tabWidth": 4,
+    "[cpp]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google,  ColumnLimit: 0, IndentWidth: 4, TabWidth: 4}"
 }
