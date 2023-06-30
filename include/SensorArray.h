@@ -64,6 +64,6 @@ class SensorArray {
 
     // Threshold for each sensor
     uint16_t sensorsThreshold[N_OF_SENSORS];
-}
+};
 
 #endif

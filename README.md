@@ -16,6 +16,10 @@
 
 # Vinho diesel V4
 
+## Third Party Libraries
+
+I have used the [QuickPID](https://github.com/lbussy/QuickPID) library by [Ibussy](https://github.com/lbussy).
+
 ## Setup errors
 
 ### Platform io doesn't recognize the package?
@@ -24,4 +28,4 @@ If you are getting an error simmilar to `Could not find the package with 'espres
 
 1. Uninstall the vscode extension.
 2. Delete the `.platformio` folder located at `C:\user\YOUR_USER\.platformio` on windows and `/home/YOUR_USER/.platformio` on linux.
-   > You can find some info here [https://community.platformio.org/t/how-to-uninstall-platformio-cli/20417](https://community.platformio.org/t/how-to-uninstall-platformio-cli/20417)
+    > You can find some info here [https://community.platformio.org/t/how-to-uninstall-platformio-cli/20417](https://community.platformio.org/t/how-to-uninstall-platformio-cli/20417)
