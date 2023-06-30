@@ -7,10 +7,12 @@
                 "terminal.integrated.defaultProfile.linux": "zsh"
             },
             "extensions": [
-                "ms-vscode.cpptools",
-                "platformio.platformio-ide",
-                "esbenp.prettier-vscode"
-            ]
+				"ms-vscode.cpptools",
+				"platformio.platformio-ide",
+				"esbenp.prettier-vscode",
+				"ms-vscode.cpptools-extension-pack",
+				"PKief.material-icon-theme"
+			]
         }
     },
     "forwardPorts": [8008],
