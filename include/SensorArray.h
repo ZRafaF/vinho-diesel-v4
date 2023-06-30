@@ -41,10 +41,13 @@ class SensorArray {
     uint16_t analogReadSensorAt(uint8_t sensorIndex);
 
     uint16_t sensorsAnalog[N_OF_SENSORS];
+    bool sensorsDigital[N_OF_SENSORS];
 
    private:
     // Turns the multiplexer pins to select a pin, receives an index
     void selectSensor(uint8_t sensorIndex);
+
+    void updateDigitalValueOfSensors();
 
     uint8_t mplxIOPin;
     uint8_t mplxS0Pin;

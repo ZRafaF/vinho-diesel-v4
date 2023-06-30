@@ -138,4 +138,16 @@ void SensorArray::updateSensorsArray() {
     sensorsAnalog[3] = analogReadSensorAt(3);
     sensorsAnalog[5] = analogReadSensorAt(5);
     sensorsAnalog[7] = analogReadSensorAt(7);
+
+    updateDigitalValueOfSensors();
+}
+
+void SensorArray::updateDigitalValueOfSensors() {
+    for (int i = 0; i < N_OF_SENSORS; i++) {
+        if (sensorsAnalog[i] > sensorsThreshold[i]) {
+            sensorsDigital[i] = true;
+        } else {
+            sensorsDigital[i] = false;
+        }
+    }
 }
