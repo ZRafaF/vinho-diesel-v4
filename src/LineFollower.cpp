@@ -35,6 +35,7 @@ void LineFollower::run() {
     sensorArray->updateSensorsArray();
     input = calculateInput(sensorArray->sensorsDigital);
     quickPID.Compute();
+
 #ifdef SERIAL_DEBUG
     Serial.print("Input: ");
     Serial.print(input);
