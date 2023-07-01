@@ -16,4 +16,31 @@
 
 LineFollower::LineFollower(SensorArray& sensArrRef) : quickPID(&input, &output, &setPoint, Kp, Ki, Kd, QuickPID::DIRECT) {
     sensorArray = &sensArrRef;
+    quickPID.SetMode(QuickPID::AUTOMATIC);
+}
+
+float LineFollower::calculateInput(bool sensorsDigital[N_OF_SENSORS]) {
+    float total = 0.0f;
+    uint8_t numberOfActiveSensors = 0;
+    for (size_t i = 0; i < N_OF_SENSORS; i++) {
+        if (sensorsDigital[i]) {
+            total += i;
+            numberOfActiveSensors++;
+        }
+    }
+    return total / numberOfActiveSensors;
+}
+
+void LineFollower::run() {
+    sensorArray->updateSensorsArray();
+    input = calculateInput(sensorArray->sensorsDigital);
+    quickPID.Compute();
+#ifdef SERIAL_DEBUG
+    Serial.print("Input: ");
+    Serial.print(input);
+    Serial.print("Output: ");
+    Serial.print(output);
+    Serial.print("Target: ");
+    Serial.print(setPoint);
+#endif
 }

@@ -17,6 +17,7 @@
 
 #include <Arduino.h>
 
+#include "GlobalConsts.h"
 #include "QuickPID.h"
 #include "SensorArray.h"
 
@@ -27,12 +28,18 @@ class LineFollower {
    private:
     void run();
 
+    /*
+        Receives an array of booleans representing the current
+        reading of each sensor and returns the average of them.
+    */
+    float calculateInput(bool sensorsDigital[N_OF_SENSORS]);
+
     SensorArray* sensorArray;
     QuickPID quickPID;
 
-    float setPoint;  // Target
-    float input;     // PID input
-    float output;    // PID output
+    float setPoint = 4.5f;  // Target
+    float input;            // PID input
+    float output;           // PID output
 
     float Kp = 2, Ki = 5, Kd = 1;
 };
