@@ -15,8 +15,10 @@
 #ifndef GLOBAL_CONSTS_H
 #define GLOBAL_CONSTS_H
 
-#include <Arduino.h>
+// Remove this to not compile the prints
+#define SERIAL_DEBUG
 
+// Number of sensors on the array
 #define N_OF_SENSORS 8
 
 #endif

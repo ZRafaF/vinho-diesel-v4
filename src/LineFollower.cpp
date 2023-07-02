@@ -35,6 +35,7 @@ void LineFollower::run() {
     sensorArray->updateSensorsArray();
     input = calculateInput(sensorArray->sensorsDigital);
     quickPID.Compute();
+    gyro.update();
 
 #ifdef SERIAL_DEBUG
     Serial.print("Input: ");
@@ -43,5 +44,13 @@ void LineFollower::run() {
     Serial.print(output);
     Serial.print("Target: ");
     Serial.print(setPoint);
+
+    Serial.print("Gx: ");
+    Serial.print(gyro.gyroscope.x);
+    Serial.print("Gy: ");
+    Serial.print(gyro.gyroscope.y);
+    Serial.print("Gz: ");
+    Serial.print(gyro.gyroscope.z);
+
 #endif
 }

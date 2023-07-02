@@ -18,7 +18,8 @@
 
 ## Third Party Libraries
 
-I have used the [QuickPID](https://github.com/lbussy/QuickPID) library by [Ibussy](https://github.com/lbussy).
+-   [QuickPID](https://github.com/lbussy/QuickPID).
+-   [mpu6050](https://github.com/ElectronicCats/mpu6050)
 
 ## Setup errors
 

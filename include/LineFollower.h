@@ -18,6 +18,7 @@
 #include <Arduino.h>
 
 #include "GlobalConsts.h"
+#include "Gyro.h"
 #include "QuickPID.h"
 #include "SensorArray.h"
 
@@ -36,6 +37,7 @@ class LineFollower {
 
     SensorArray* sensorArray;
     QuickPID quickPID;
+    Gyro gyro;
 
     float setPoint = 4.5f;  // Target
     float input;            // PID input
