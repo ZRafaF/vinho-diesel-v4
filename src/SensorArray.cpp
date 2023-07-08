@@ -52,6 +52,16 @@ void SensorArray::calibrateSensors() {
     }
 }
 
+void SensorArray::printAllAnalog() {
+#ifdef SERIAL_DEBUG
+    for (uint16_t i = 0; i < N_OF_SENSORS; i++) {
+        Serial.print(sensorsAnalog[i]);
+        Serial.print(",");
+    }
+    Serial.println(".");
+#endif
+}
+
 void SensorArray::selectSensor(uint8_t sensorIndex) {
     /*
         S0  S1  S2  Channel
@@ -116,7 +126,7 @@ void SensorArray::selectSensor(uint8_t sensorIndex) {
 
 uint16_t SensorArray::analogReadSensorAt(uint8_t sensorIndex) {
     selectSensor(sensorIndex);
-    return analogRead(sensorIndex);
+    return analogRead(mplxIOPin);
 }
 
 void SensorArray::updateSensorsArray() {

@@ -33,6 +33,8 @@ class SensorArray {
 
     void calibrateSensors();
 
+    void printAllAnalog();
+
     /*
         Returns the analog read of a sensor, receives an index;
 
