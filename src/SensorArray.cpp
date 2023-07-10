@@ -62,6 +62,16 @@ void SensorArray::printAllAnalog() {
 #endif
 }
 
+void SensorArray::printAllDigital() {
+#ifdef SERIAL_DEBUG
+    for (uint16_t i = 0; i < N_OF_SENSORS; i++) {
+        Serial.print(sensorsDigital[i]);
+        Serial.print(",");
+    }
+    Serial.println(".");
+#endif
+}
+
 void SensorArray::selectSensor(uint8_t sensorIndex) {
     /*
         S0  S1  S2  Channel
@@ -74,43 +84,44 @@ void SensorArray::selectSensor(uint8_t sensorIndex) {
         H   H   L   Y6 = S3
         H   H   H   Y7 = S2
     */
+
     switch (sensorIndex) {
-        case 7:
-            digitalWrite(mplxS0Pin, LOW);
-            digitalWrite(mplxS1Pin, LOW);
-            digitalWrite(mplxS2Pin, LOW);
-            break;
         case 6:
             digitalWrite(mplxS0Pin, LOW);
             digitalWrite(mplxS1Pin, LOW);
-            digitalWrite(mplxS2Pin, HIGH);
+            digitalWrite(mplxS2Pin, LOW);
             break;
         case 5:
             digitalWrite(mplxS0Pin, LOW);
-            digitalWrite(mplxS1Pin, HIGH);
-            digitalWrite(mplxS2Pin, LOW);
-            break;
-        case 8:
-            digitalWrite(mplxS0Pin, LOW);
-            digitalWrite(mplxS1Pin, HIGH);
+            digitalWrite(mplxS1Pin, LOW);
             digitalWrite(mplxS2Pin, HIGH);
             break;
         case 4:
-            digitalWrite(mplxS0Pin, HIGH);
-            digitalWrite(mplxS1Pin, LOW);
+            digitalWrite(mplxS0Pin, LOW);
+            digitalWrite(mplxS1Pin, HIGH);
             digitalWrite(mplxS2Pin, LOW);
             break;
-        case 1:
-            digitalWrite(mplxS0Pin, HIGH);
-            digitalWrite(mplxS1Pin, LOW);
+        case 7:
+            digitalWrite(mplxS0Pin, LOW);
+            digitalWrite(mplxS1Pin, HIGH);
             digitalWrite(mplxS2Pin, HIGH);
             break;
         case 3:
             digitalWrite(mplxS0Pin, HIGH);
+            digitalWrite(mplxS1Pin, LOW);
+            digitalWrite(mplxS2Pin, LOW);
+            break;
+        case 0:
+            digitalWrite(mplxS0Pin, HIGH);
+            digitalWrite(mplxS1Pin, LOW);
+            digitalWrite(mplxS2Pin, HIGH);
+            break;
+        case 2:
+            digitalWrite(mplxS0Pin, HIGH);
             digitalWrite(mplxS1Pin, HIGH);
             digitalWrite(mplxS2Pin, LOW);
             break;
-        case 2:
+        case 1:
             digitalWrite(mplxS0Pin, HIGH);
             digitalWrite(mplxS1Pin, HIGH);
             digitalWrite(mplxS2Pin, HIGH);
@@ -129,27 +140,67 @@ uint16_t SensorArray::analogReadSensorAt(uint8_t sensorIndex) {
     return analogRead(mplxIOPin);
 }
 
+uint16_t SensorArray::digitalReadSensorAt(uint8_t sensorIndex) {
+    selectSensor(sensorIndex);
+    return digitalRead(mplxIOPin);
+}
+
 void SensorArray::updateSensorsArray() {
+#ifndef LED_ALWAYS_ON
     // Sets the P-channel MOSFFET gate to LOW, turning it on
     digitalWrite(ledSelec1Pin, LOW);
 
     // Sets the P-channel MOSFFET gate to HIGH, turning it off
     digitalWrite(ledSelec2Pin, HIGH);
 
+#endif
+
+#ifdef DIGITAL_READINGS
+    sensorsDigital[0] = digitalReadSensorAt(0);
+
+    sensorsDigital[2] = digitalReadSensorAt(2);
+
+    sensorsDigital[4] = digitalReadSensorAt(4);
+
+    sensorsDigital[6] = digitalReadSensorAt(6);
+
+#else
     sensorsAnalog[0] = analogReadSensorAt(0);
+
     sensorsAnalog[2] = analogReadSensorAt(2);
+
     sensorsAnalog[4] = analogReadSensorAt(4);
+
     sensorsAnalog[6] = analogReadSensorAt(6);
 
+#endif
+
+#ifndef LED_ALWAYS_ON
     digitalWrite(ledSelec1Pin, HIGH);
+
     digitalWrite(ledSelec2Pin, LOW);
 
+#endif
+
+#ifdef DIGITAL_READINGS
+    sensorsDigital[1] = digitalReadSensorAt(1);
+
+    sensorsDigital[3] = digitalReadSensorAt(3);
+
+    sensorsDigital[5] = digitalReadSensorAt(5);
+
+    sensorsDigital[7] = digitalReadSensorAt(7);
+#else
     sensorsAnalog[1] = analogReadSensorAt(1);
+
     sensorsAnalog[3] = analogReadSensorAt(3);
+
     sensorsAnalog[5] = analogReadSensorAt(5);
+
     sensorsAnalog[7] = analogReadSensorAt(7);
 
     updateDigitalValueOfSensors();
+#endif
 }
 
 void SensorArray::updateDigitalValueOfSensors() {

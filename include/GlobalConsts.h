@@ -18,6 +18,12 @@
 // Remove this to not compile the prints
 #define SERIAL_DEBUG
 
+// Remove this to set as analog reading
+#define DIGITAL_READINGS
+
+// Remove this to allow the robot to control the LED array
+#define LED_ALWAYS_ON
+
 // Number of sensors on the array
 #define N_OF_SENSORS 8
 

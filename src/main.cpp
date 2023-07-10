@@ -25,5 +25,6 @@ void loop() {
     Serial.println("update");
     mySens.updateSensorsArray();
     mySens.printAllAnalog();
+    mySens.printAllDigital();
     delay(200);
 }

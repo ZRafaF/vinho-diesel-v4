@@ -34,6 +34,7 @@ class SensorArray {
     void calibrateSensors();
 
     void printAllAnalog();
+    void printAllDigital();
 
     /*
         Returns the analog read of a sensor, receives an index;
@@ -41,6 +42,7 @@ class SensorArray {
         DOES NOT CHECK FOR THE LED
     */
     uint16_t analogReadSensorAt(uint8_t sensorIndex);
+    uint16_t digitalReadSensorAt(uint8_t sensorIndex);
 
     uint16_t sensorsAnalog[N_OF_SENSORS];
     bool sensorsDigital[N_OF_SENSORS];
