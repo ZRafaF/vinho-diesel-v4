@@ -37,6 +37,9 @@ class LineFollower {
 
     void run();
 
+    // Prints all parameters
+    void printAll();
+
    private:
     /*
         Receives an array of booleans representing the current
@@ -50,11 +53,12 @@ class LineFollower {
     QuickPID quickPID;
     Gyro* gyro;
 
-    float setPoint = 4.5f;  // Target
+    float setPoint = 3.5f;  // Target
     float input;            // PID input
     float output;           // PID output
 
-    int16_t rotationSpeed;  // Speed of rotation
+    int16_t rotSpeed;        // Speed of rotation
+    int16_t rotSpeedTarget;  // Speed of rotation
 
     float Kp = 2, Ki = 5, Kd = 1;
 

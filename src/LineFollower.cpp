@@ -63,6 +63,25 @@ float LineFollower::calculateInput(bool sensorsDigital[N_OF_SENSORS]) {
     return total / numberOfActiveSensors;
 }
 
+void LineFollower::printAll() {
+#ifdef SERIAL_DEBUG
+    Serial.print("input: ");
+    Serial.print(input);
+    Serial.print("\t");
+    Serial.print("output: ");
+    Serial.print(output);
+    Serial.print("\t");
+    Serial.print("rotSpeed: ");
+    Serial.print(rotSpeed);
+    Serial.print("\t");
+    Serial.print("b2: ");
+    Serial.print(button1);
+    Serial.print("b2: ");
+    Serial.println(button2);
+
+#endif
+}
+
 void LineFollower::run() {
     updateButtons();
     if (!gyroWasCalibrated) {
@@ -71,7 +90,7 @@ void LineFollower::run() {
         if (button1) {
             digitalWrite(led1Pin, HIGH);
             digitalWrite(led2Pin, HIGH);
-            delay(3);
+            delay(1000);
 
             digitalWrite(led2Pin, LOW);
             if (gyro->calibrate()) {
@@ -79,6 +98,7 @@ void LineFollower::run() {
                 gyroWasCalibrated = true;
             }
         }
+        delay(200);
         return;
     }
     sensorArray->updateSensorsArray();
@@ -86,7 +106,9 @@ void LineFollower::run() {
     quickPID.Compute();
     gyro->update();
 
-    rotationSpeed = gyro->gyroscope.z;
+    rotSpeed = gyro->gyroscope.z;
+
+    printAll();
 
     delay(200);
 }
