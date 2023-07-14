@@ -15,12 +15,45 @@
 #include "Gyro.h"
 
 Gyro::Gyro() {
-    Wire.begin();
-    accelgyro.initialize();
+}
+void Gyro::initialize() {
+    accelGyro.initialize();
+
+#ifdef SERIAL_DEBUG
+    Serial.println(accelGyro.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");
+#endif
+}
+
+bool Gyro::calibrate() {
+    accelGyro.CalibrateAccel(6);
+    accelGyro.CalibrateGyro(6);
+#ifdef SERIAL_DEBUG
+    accelGyro.PrintActiveOffsets();
+#endif
+    update();
+
+    return abs(gyroscope.z) <= 500 ? true : false;
+}
+
+void Gyro::printReadings() {
+#ifdef SERIAL_DEBUG
+    Serial.print("a/g:\t");
+    Serial.print(accelerometer.x);
+    Serial.print("\t");
+    Serial.print(accelerometer.y);
+    Serial.print("\t");
+    Serial.print(accelerometer.z);
+    Serial.print("\t");
+    Serial.print(gyroscope.x);
+    Serial.print("\t");
+    Serial.print(gyroscope.y);
+    Serial.print("\t");
+    Serial.println(gyroscope.z);
+#endif
 }
 
 void Gyro::update() {
-    accelgyro.getMotion6(
+    accelGyro.getMotion6(
         &accelerometer.x,
         &accelerometer.y,
         &accelerometer.z,

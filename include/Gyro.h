@@ -19,6 +19,7 @@
 #include <I2Cdev.h>
 #include <Wire.h>
 
+#include "GlobalConsts.h"
 #include "MPU6050.h"
 
 struct Vec3 {
@@ -41,12 +42,29 @@ class Gyro {
    public:
     Gyro();
 
+    // Initializes the I2C connection
+    void initialize();
+
+    /*
+    Calibrates the gyroscope
+
+    Return TRUE if it succeeded, else returns FALSE
+
+    WARNING: The only parameter checked is the gyro.z
+    */
+    bool calibrate();
+
+    // Prints the gyro and accel readings
+    void printReadings();
+
     // Updates the Accelerometer and Gyroscope vector
     void update();
 
-    MPU6050 accelgyro;
+    // The only used parameter is the gyroscope z
     Vec3 accelerometer;
     Vec3 gyroscope;
-    Vec3 angularVelocity;
+
+   private:
+    MPU6050 accelGyro;
 };
 #endif

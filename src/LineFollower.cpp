@@ -14,9 +14,41 @@
 
 #include "LineFollower.h"
 
-LineFollower::LineFollower(SensorArray& sensArrRef) : quickPID(&input, &output, &setPoint, Kp, Ki, Kd, QuickPID::DIRECT) {
+LineFollower::LineFollower(
+    SensorArray& sensArrRef,
+    Gyro& gyroRef,
+    uint8_t statusLed1,
+    uint8_t statusLed2,
+    uint8_t inputButton1,
+    uint8_t inputButton2) : quickPID(&input,
+                                     &output,
+                                     &setPoint,
+                                     Kp,
+                                     Ki,
+                                     Kd,
+                                     QuickPID::DIRECT) {
     sensorArray = &sensArrRef;
+    gyro = &gyroRef;
     quickPID.SetMode(QuickPID::AUTOMATIC);
+
+    led1Pin = statusLed1;
+    led2Pin = statusLed2;
+    button1Pin = inputButton1;
+    button2Pin = inputButton2;
+}
+
+void LineFollower::initialize() {
+    sensorArray->initialize();
+    gyro->initialize();
+    pinMode(led1Pin, OUTPUT);
+    pinMode(led2Pin, OUTPUT);
+    pinMode(button1Pin, INPUT);
+    pinMode(button2Pin, INPUT);
+}
+
+void LineFollower::updateButtons() {
+    button1 = digitalRead(button1Pin);
+    button2 = digitalRead(button2Pin);
 }
 
 float LineFollower::calculateInput(bool sensorsDigital[N_OF_SENSORS]) {
@@ -32,25 +64,29 @@ float LineFollower::calculateInput(bool sensorsDigital[N_OF_SENSORS]) {
 }
 
 void LineFollower::run() {
+    updateButtons();
+    if (!gyroWasCalibrated) {
+        Serial.println(button1);
+        Serial.println(button2);
+        if (button1) {
+            digitalWrite(led1Pin, HIGH);
+            digitalWrite(led2Pin, HIGH);
+            delay(3);
+
+            digitalWrite(led2Pin, LOW);
+            if (gyro->calibrate()) {
+                digitalWrite(led1Pin, LOW);
+                gyroWasCalibrated = true;
+            }
+        }
+        return;
+    }
     sensorArray->updateSensorsArray();
     input = calculateInput(sensorArray->sensorsDigital);
     quickPID.Compute();
-    gyro.update();
+    gyro->update();
 
-#ifdef SERIAL_DEBUG
-    Serial.print("Input: ");
-    Serial.print(input);
-    Serial.print("Output: ");
-    Serial.print(output);
-    Serial.print("Target: ");
-    Serial.print(setPoint);
+    rotationSpeed = gyro->gyroscope.z;
 
-    Serial.print("Gx: ");
-    Serial.print(gyro.gyroscope.x);
-    Serial.print("Gy: ");
-    Serial.print(gyro.gyroscope.y);
-    Serial.print("Gz: ");
-    Serial.print(gyro.gyroscope.z);
-
-#endif
+    delay(200);
 }

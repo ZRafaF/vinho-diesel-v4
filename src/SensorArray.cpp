@@ -26,17 +26,19 @@ SensorArray::SensorArray(uint8_t multiplexerIOPin,
     ledSelec1Pin = ledSelector1Pin;
     ledSelec2Pin = ledSelector2Pin;
 
+    for (int i = 0; i < N_OF_SENSORS; i++) {
+        minRead[i] = UINT16_MAX;
+        maxRead[i] = 0;
+    }
+}
+
+void SensorArray::initialize() {
     pinMode(mplxIOPin, INPUT);
     pinMode(mplxS0Pin, OUTPUT);
     pinMode(mplxS1Pin, OUTPUT);
     pinMode(mplxS2Pin, OUTPUT);
     pinMode(ledSelec1Pin, OUTPUT);
     pinMode(ledSelec2Pin, OUTPUT);
-
-    for (int i = 0; i < N_OF_SENSORS; i++) {
-        minRead[i] = UINT16_MAX;
-        maxRead[i] = 0;
-    }
 }
 
 void SensorArray::calibrateSensors() {

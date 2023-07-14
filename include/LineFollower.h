@@ -24,26 +24,50 @@
 
 class LineFollower {
    public:
-    LineFollower(SensorArray& sensArrRef);
+    LineFollower(
+        SensorArray& sensArrRef,
+        Gyro& gyroRef,
+        uint8_t statusLed1,
+        uint8_t statusLed2,
+        uint8_t inputButton1,
+        uint8_t inputButton2);
 
-   private:
+    // Sets up every component, should be called on the main setup function
+    void initialize();
+
     void run();
 
+   private:
     /*
         Receives an array of booleans representing the current
         reading of each sensor and returns the average of them.
     */
     float calculateInput(bool sensorsDigital[N_OF_SENSORS]);
 
+    void updateButtons();
+
     SensorArray* sensorArray;
     QuickPID quickPID;
-    Gyro gyro;
+    Gyro* gyro;
 
     float setPoint = 4.5f;  // Target
     float input;            // PID input
     float output;           // PID output
 
+    int16_t rotationSpeed;  // Speed of rotation
+
     float Kp = 2, Ki = 5, Kd = 1;
+
+    uint8_t
+        led1Pin,
+        led2Pin,
+        button1Pin,
+        button2Pin;
+
+    bool button1 = false;
+    bool button2 = true;
+
+    bool gyroWasCalibrated = false;
 };
 
 #endif  // LINE_FOLLOWER_H

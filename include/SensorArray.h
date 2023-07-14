@@ -29,6 +29,8 @@ class SensorArray {
         uint8_t ledSelector1Pin,
         uint8_t ledSelector2Pin);
 
+    void initialize();
+
     void updateSensorsArray();
 
     void calibrateSensors();
