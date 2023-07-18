@@ -17,19 +17,22 @@
 LineFollower::LineFollower(
     SensorArray& sensArrRef,
     Gyro& gyroRef,
+    PIDestal& pidRef,
+    Tb6612fng& motorsRef,
+#ifdef USE_BLUETOOTH
+    PIDestalRemoteBLE& remotePidRef,
+#endif
     uint8_t statusLed1,
     uint8_t statusLed2,
     uint8_t inputButton1,
-    uint8_t inputButton2) : quickPID(&input,
-                                     &output,
-                                     &setPoint,
-                                     Kp,
-                                     Ki,
-                                     Kd,
-                                     QuickPID::DIRECT) {
+    uint8_t inputButton2) {
     sensorArray = &sensArrRef;
     gyro = &gyroRef;
-    quickPID.SetMode(QuickPID::AUTOMATIC);
+    pid = &pidRef;
+    motors = &motorsRef;
+#ifdef USE_BLUETOOTH
+    remotePid = &remotePidRef;
+#endif
 
     led1Pin = statusLed1;
     led2Pin = statusLed2;
@@ -38,12 +41,20 @@ LineFollower::LineFollower(
 }
 
 void LineFollower::initialize() {
+#ifdef USE_BLUETOOTH
+    remotePid->initialize("VINHO_DIESEL", "diesel");
+#endif
+
     sensorArray->initialize();
     gyro->initialize();
+
     pinMode(led1Pin, OUTPUT);
     pinMode(led2Pin, OUTPUT);
     pinMode(button1Pin, INPUT);
     pinMode(button2Pin, INPUT);
+    digitalWrite(led2Pin, HIGH);
+
+    motors->begin();
 }
 
 void LineFollower::updateButtons() {
@@ -63,13 +74,17 @@ float LineFollower::calculateInput(bool sensorsDigital[N_OF_SENSORS]) {
     return total / numberOfActiveSensors;
 }
 
+float LineFollower::calculateTargetRotSpeed(float error) {
+    return error * 1000;
+}
+
 void LineFollower::printAll() {
 #ifdef SERIAL_DEBUG
     Serial.print("input: ");
-    Serial.print(input);
+    Serial.print(sensorInput);
     Serial.print("\t");
-    Serial.print("output: ");
-    Serial.print(output);
+    Serial.print("pidResult: ");
+    Serial.print(pidResult);
     Serial.print("\t");
     Serial.print("rotSpeed: ");
     Serial.print(rotSpeed);
@@ -83,13 +98,16 @@ void LineFollower::printAll() {
 }
 
 void LineFollower::run() {
+#ifdef USE_BLUETOOTH
+    remotePid->process();
+    remotePid->setExtraInfo("t: " + String(rotSpeedTarget) + " r: " + String(rotSpeed));
+#endif
     updateButtons();
     if (!gyroWasCalibrated) {
         Serial.println(button1);
         Serial.println(button2);
         if (button1) {
             digitalWrite(led1Pin, HIGH);
-            digitalWrite(led2Pin, HIGH);
             delay(1000);
 
             digitalWrite(led2Pin, LOW);
@@ -102,13 +120,15 @@ void LineFollower::run() {
         return;
     }
     sensorArray->updateSensorsArray();
-    input = calculateInput(sensorArray->sensorsDigital);
-    quickPID.Compute();
+    sensorInput = calculateInput(sensorArray->sensorsDigital);
     gyro->update();
 
+    rotSpeedTarget = calculateTargetRotSpeed(sensorTarget - sensorInput);
     rotSpeed = gyro->gyroscope.z;
+
+    pidResult = pid->calculate(rotSpeed - rotSpeedTarget);
 
     printAll();
 
-    delay(200);
+    delay(20);
 }

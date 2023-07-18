@@ -15,6 +15,8 @@
 #ifndef LINE_FOLLOWER_H
 #define LINE_FOLLOWER_H
 
+#define USE_BLUETOOTH
+
 #include <Arduino.h>
 
 #include "GlobalConsts.h"
@@ -22,12 +24,18 @@
 #include "PIDestal.h"
 #include "PIDestalRemoteBLE.h"
 #include "SensorArray.h"
+#include "TB6612FNG.h"
 
 class LineFollower {
    public:
     LineFollower(
         SensorArray& sensArrRef,
         Gyro& gyroRef,
+        PIDestal& pidRef,
+        Tb6612fng& motorsRef,
+#ifdef USE_BLUETOOTH
+        PIDestalRemoteBLE& remotePidRef,
+#endif
         uint8_t statusLed1,
         uint8_t statusLed2,
         uint8_t inputButton1,
@@ -47,16 +55,22 @@ class LineFollower {
         reading of each sensor and returns the average of them.
     */
     float calculateInput(bool sensorsDigital[N_OF_SENSORS]);
+    float calculateTargetRotSpeed(float error);
 
     void updateButtons();
 
     SensorArray* sensorArray;
-    PIDestal pid;
+    PIDestal* pid;
+#ifdef USE_BLUETOOTH
+    PIDestalRemoteBLE* remotePid;
+#endif
     Gyro* gyro;
+    Tb6612fng* motors;
 
-    float setPoint = 3.5f;  // Target
-    float input;            // PID input
-    float output;           // PID output
+    float sensorTarget = 3.5f;  // Target
+    float sensorInput;          // Input
+
+    float pidResult;
 
     int16_t rotSpeed;        // Speed of rotation
     int16_t rotSpeedTarget;  // Speed of rotation

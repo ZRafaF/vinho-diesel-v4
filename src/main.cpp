@@ -3,7 +3,10 @@
 #include "GlobalConsts.h"
 #include "Gyro.h"
 #include "LineFollower.h"
+#include "PIDestal.h"
+#include "PIDestalRemoteBLE.h"
 #include "SensorArray.h"
+#include "TB6612FNG.h"
 
 #define MIO 9
 #define MPLX_S0 13
@@ -20,6 +23,14 @@
 #define INPUT_BTN_1 19
 #define INPUT_BTN_2 20
 
+#define PWM_A 38
+#define AIN_2 45
+#define AIN_1 48
+#define STBY 39
+#define BIN_1 5
+#define BIN_2 4
+#define PWM_B 2
+
 SensorArray mySens(
     MIO,
     MPLX_S0,
@@ -30,9 +41,29 @@ SensorArray mySens(
 
 Gyro myGyro;
 
+Tb6612fng myMotors(
+    STBY,
+    AIN_1,
+    AIN_2,
+    PWM_A,
+    BIN_1,
+    BIN_2,
+    PWM_B);
+
+PIDestal myPid(0.2, 1, 0.002);
+
+#ifdef USE_BLUETOOTH
+PIDestalRemoteBLE myRemotePid(myPid);
+#endif
+
 LineFollower myLineFollower(
     mySens,
     myGyro,
+    myPid,
+    myMotors,
+#ifdef USE_BLUETOOTH
+    myRemotePid,
+#endif
     STATUS_LED_1,
     STATUS_LED_2,
     INPUT_BTN_1,
