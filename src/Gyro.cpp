@@ -14,10 +14,26 @@
 
 #include "Gyro.h"
 
+/*
+To get degrees/sec divide by 131.0
+
+CW = Negative value
+
+CCW = Negative value
+
+*/
 Gyro::Gyro() {
 }
 void Gyro::initialize() {
     accelGyro.initialize();
+
+    /*
+     * 0 = +/- 250 degrees/sec
+     * 1 = +/- 500 degrees/sec
+     * 2 = +/- 1000 degrees/sec
+     * 3 = +/- 2000 degrees/sec
+     * */
+    accelGyro.setFullScaleGyroRange(2);
 
 #ifdef SERIAL_DEBUG
     Serial.println(accelGyro.testConnection() ? "MPU6050 connection successful" : "MPU6050 connection failed");

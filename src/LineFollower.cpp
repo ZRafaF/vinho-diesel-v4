@@ -100,7 +100,7 @@ void LineFollower::printAll() {
 void LineFollower::run() {
 #ifdef USE_BLUETOOTH
     remotePid->process();
-    remotePid->setExtraInfo("t: " + String(rotSpeedTarget) + " r: " + String(rotSpeed));
+    remotePid->setExtraInfo("t: " + String(rotSpeedTarget) + " r: " + String(float(rotSpeed) / (131.0)));
 #endif
     updateButtons();
     if (!gyroWasCalibrated) {
