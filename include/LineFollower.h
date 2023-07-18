@@ -19,7 +19,8 @@
 
 #include "GlobalConsts.h"
 #include "Gyro.h"
-#include "QuickPID.h"
+#include "PIDestal.h"
+#include "PIDestalRemoteBLE.h"
 #include "SensorArray.h"
 
 class LineFollower {
@@ -50,7 +51,7 @@ class LineFollower {
     void updateButtons();
 
     SensorArray* sensorArray;
-    QuickPID quickPID;
+    PIDestal pid;
     Gyro* gyro;
 
     float setPoint = 3.5f;  // Target

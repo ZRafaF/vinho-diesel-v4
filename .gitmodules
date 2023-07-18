@@ -7,3 +7,6 @@
 [submodule "lib/mpu6050"]
 	path = lib/mpu6050
 	url = https://github.com/ElectronicCats/mpu6050
+[submodule "lib/ArduinoBLE"]
+	path = lib/ArduinoBLE
+	url = https://github.com/arduino-libraries/ArduinoBLE
