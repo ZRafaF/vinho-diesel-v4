@@ -4,3 +4,6 @@
 [submodule "lib/PIDestal"]
 	path = lib/PIDestal
 	url = https://github.com/HefestusTec/PIDestal
+[submodule "lib/mpu6050"]
+	path = lib/mpu6050
+	url = https://github.com/ElectronicCats/mpu6050
