@@ -1,0 +1,3 @@
+[submodule "lib/PIDestal-remote-BLE"]
+	path = lib/PIDestal-remote-BLE
+	url = https://github.com/ZRafaF/PIDestal-remote-BLE
