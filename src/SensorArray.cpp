@@ -18,13 +18,17 @@ SensorArray::SensorArray(uint8_t multiplexerIOPin,
                          uint8_t multiplexerS1Pin,
                          uint8_t multiplexerS2Pin,
                          uint8_t ledSelector1Pin,
-                         uint8_t ledSelector2Pin) {
+                         uint8_t ledSelector2Pin,
+                         LineColor colorOfTheLine,
+                         bool useAnalogSensors) {
     mplxIOPin = multiplexerIOPin;
     mplxS0Pin = multiplexerS0Pin;
     mplxS1Pin = multiplexerS1Pin;
     mplxS2Pin = multiplexerS2Pin;
     ledSelec1Pin = ledSelector1Pin;
     ledSelec2Pin = ledSelector2Pin;
+    lineColor = colorOfTheLine;
+    readsAnalog = useAnalogSensors;
 
     for (int i = 0; i < N_OF_SENSORS; i++) {
         minRead[i] = UINT16_MAX;
@@ -44,30 +48,30 @@ void SensorArray::initialize() {
 void SensorArray::calibrateSensors() {
     updateSensorsArray();
     for (int i = 0; i < N_OF_SENSORS; i++) {
-        if (sensorsAnalog[i] > maxRead[i]) {
-            maxRead[i] = sensorsAnalog[i];
+        if (sensorRaw[i] > maxRead[i]) {
+            maxRead[i] = sensorRaw[i];
         }
-        if (sensorsAnalog[i] < minRead[i]) {
-            minRead[i] = sensorsAnalog[i];
+        if (sensorRaw[i] < minRead[i]) {
+            minRead[i] = sensorRaw[i];
         }
         sensorsThreshold[i] = (maxRead[i] + minRead[i]) / 2;
     }
 }
 
-void SensorArray::printAllAnalog() {
+void SensorArray::printAllRaw() {
 #ifdef SERIAL_DEBUG
     for (uint16_t i = 0; i < N_OF_SENSORS; i++) {
-        Serial.print(sensorsAnalog[i]);
+        Serial.print(sensorRaw[i]);
         Serial.print(",");
     }
     Serial.println(".");
 #endif
 }
 
-void SensorArray::printAllDigital() {
+void SensorArray::printAllProcessed() {
 #ifdef SERIAL_DEBUG
     for (uint16_t i = 0; i < N_OF_SENSORS; i++) {
-        Serial.print(sensorsDigital[i]);
+        Serial.print(sensorProcessed[i]);
         Serial.print(",");
     }
     Serial.println(".");
@@ -137,14 +141,9 @@ void SensorArray::selectSensor(uint8_t sensorIndex) {
     }
 }
 
-uint16_t SensorArray::analogReadSensorAt(uint8_t sensorIndex) {
+uint16_t SensorArray::readSensorAt(uint8_t sensorIndex) {
     selectSensor(sensorIndex);
-    return analogRead(mplxIOPin);
-}
-
-uint16_t SensorArray::digitalReadSensorAt(uint8_t sensorIndex) {
-    selectSensor(sensorIndex);
-    return digitalRead(mplxIOPin);
+    return readsAnalog ? analogRead(mplxIOPin) : digitalRead(mplxIOPin);
 }
 
 void SensorArray::updateSensorsArray() {
@@ -157,25 +156,13 @@ void SensorArray::updateSensorsArray() {
 
 #endif
 
-#ifdef DIGITAL_READINGS
-    sensorsDigital[0] = digitalReadSensorAt(0);
+    sensorRaw[0] = readSensorAt(0);
 
-    sensorsDigital[2] = digitalReadSensorAt(2);
+    sensorRaw[2] = readSensorAt(2);
 
-    sensorsDigital[4] = digitalReadSensorAt(4);
+    sensorRaw[4] = readSensorAt(4);
 
-    sensorsDigital[6] = digitalReadSensorAt(6);
-
-#else
-    sensorsAnalog[0] = analogReadSensorAt(0);
-
-    sensorsAnalog[2] = analogReadSensorAt(2);
-
-    sensorsAnalog[4] = analogReadSensorAt(4);
-
-    sensorsAnalog[6] = analogReadSensorAt(6);
-
-#endif
+    sensorRaw[6] = readSensorAt(6);
 
 #ifndef LED_ALWAYS_ON
     digitalWrite(ledSelec1Pin, HIGH);
@@ -184,33 +171,33 @@ void SensorArray::updateSensorsArray() {
 
 #endif
 
-#ifdef DIGITAL_READINGS
-    sensorsDigital[1] = digitalReadSensorAt(1);
+    sensorRaw[1] = readSensorAt(1);
 
-    sensorsDigital[3] = digitalReadSensorAt(3);
+    sensorRaw[3] = readSensorAt(3);
 
-    sensorsDigital[5] = digitalReadSensorAt(5);
+    sensorRaw[5] = readSensorAt(5);
 
-    sensorsDigital[7] = digitalReadSensorAt(7);
-#else
-    sensorsAnalog[1] = analogReadSensorAt(1);
+    sensorRaw[7] = readSensorAt(7);
 
-    sensorsAnalog[3] = analogReadSensorAt(3);
-
-    sensorsAnalog[5] = analogReadSensorAt(5);
-
-    sensorsAnalog[7] = analogReadSensorAt(7);
-
-    updateDigitalValueOfSensors();
-#endif
+    processReadings();
 }
 
-void SensorArray::updateDigitalValueOfSensors() {
+void SensorArray::processReadings() {
+    if (!readsAnalog) {
+        for (int i = 0; i < N_OF_SENSORS; i++) {
+            if (sensorRaw[i]) {
+                sensorProcessed[i] = lineColor == BLACK ? true : false;
+            } else {
+                sensorProcessed[i] = lineColor == BLACK ? false : true;
+            }
+        }
+        return;
+    }
     for (int i = 0; i < N_OF_SENSORS; i++) {
-        if (sensorsAnalog[i] > sensorsThreshold[i]) {
-            sensorsDigital[i] = true;
+        if (sensorRaw[i] > sensorsThreshold[i]) {
+            sensorProcessed[i] = lineColor == BLACK ? true : false;
         } else {
-            sensorsDigital[i] = false;
+            sensorProcessed[i] = lineColor == BLACK ? false : true;
         }
     }
 }

@@ -76,4 +76,5 @@ void Gyro::update() {
         &gyroscope.x,
         &gyroscope.y,
         &gyroscope.z);
+    rotationSpeed = float(gyroscope.z) / 131.0f;
 }

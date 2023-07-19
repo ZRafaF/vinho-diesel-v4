@@ -17,7 +17,8 @@
 LineFollower::LineFollower(
     SensorArray& sensArrRef,
     Gyro& gyroRef,
-    PIDestal& pidRef,
+    PIDestal& pidLRef,
+    PIDestal& pidRRef,
     Tb6612fng& motorsRef,
 #ifdef USE_BLUETOOTH
     PIDestalRemoteBLE& remotePidRef,
@@ -28,7 +29,10 @@ LineFollower::LineFollower(
     uint8_t inputButton2) {
     sensorArray = &sensArrRef;
     gyro = &gyroRef;
-    pid = &pidRef;
+    pidL = &pidLRef;
+    pidL->errorTolerance = 1;
+    pidR = &pidRRef;
+    pidR->errorTolerance = 1;
     motors = &motorsRef;
 #ifdef USE_BLUETOOTH
     remotePid = &remotePidRef;
@@ -42,7 +46,7 @@ LineFollower::LineFollower(
 
 void LineFollower::initialize() {
 #ifdef USE_BLUETOOTH
-    remotePid->initialize("VINHO_DIESEL", "diesel");
+    remotePid->initialize("VINHO_DIESEL", "Diesel");
 #endif
 
     sensorArray->initialize();
@@ -52,7 +56,6 @@ void LineFollower::initialize() {
     pinMode(led2Pin, OUTPUT);
     pinMode(button1Pin, INPUT);
     pinMode(button2Pin, INPUT);
-    digitalWrite(led2Pin, HIGH);
 
     motors->begin();
 }
@@ -60,22 +63,58 @@ void LineFollower::initialize() {
 void LineFollower::updateButtons() {
     button1 = digitalRead(button1Pin);
     button2 = digitalRead(button2Pin);
+
+    if (button1) {
+        toggleMotorsAreActive();
+    }
 }
 
-float LineFollower::calculateInput(bool sensorsDigital[N_OF_SENSORS]) {
+void LineFollower::toggleMotorsAreActive() {
+    unsigned long currentTime = millis();
+    if (currentTime > lastPressedButtonTime + 500) {
+        lastPressedButtonTime = currentTime;
+        motorsAreActive = !motorsAreActive;
+    }
+}
+
+float LineFollower::calculateInput(bool sensorsProcessed[N_OF_SENSORS]) {
     float total = 0.0f;
     uint8_t numberOfActiveSensors = 0;
     for (size_t i = 0; i < N_OF_SENSORS; i++) {
-        if (sensorsDigital[i]) {
+        if (sensorsProcessed[i]) {
             total += i;
             numberOfActiveSensors++;
         }
     }
-    return total / numberOfActiveSensors;
+    if (numberOfActiveSensors) {
+        const float inputResult = total / numberOfActiveSensors;
+        lastValidSensorInput = inputResult;
+    }
+    return lastValidSensorInput;
 }
 
 float LineFollower::calculateTargetRotSpeed(float error) {
-    return error * 1000;
+    float absError = abs(error);
+    float errorSignal = error / absError;
+    if (absError > 0 && absError <= 1) return errorSignal * 10;
+    if (absError > 1 && absError <= 2) return errorSignal * 20;
+    if (absError > 2 && absError <= 3) return errorSignal * 30;
+    if (absError > 3 && absError <= 4) return errorSignal * 40;
+    if (absError > 4) return errorSignal * 50;
+
+    return (error * error) * 2;
+}
+
+void LineFollower::updateMotors() {
+    leftMotorOutput = motorOffset + (pidResult * errorGain);
+    rightMotorOutput = motorOffset - (pidResult * errorGain);
+
+    if (leftMotorOutput > motorClamp) leftMotorOutput = motorClamp;
+    if (leftMotorOutput < -motorClamp) leftMotorOutput = -motorClamp;
+    if (rightMotorOutput > motorClamp) rightMotorOutput = motorClamp;
+    if (rightMotorOutput < -motorClamp) rightMotorOutput = -motorClamp;
+
+    motors->drive(leftMotorOutput, rightMotorOutput);
 }
 
 void LineFollower::printAll() {
@@ -83,16 +122,29 @@ void LineFollower::printAll() {
     Serial.print("input: ");
     Serial.print(sensorInput);
     Serial.print("\t");
-    Serial.print("pidResult: ");
+    Serial.print("pidR: ");
     Serial.print(pidResult);
+    Serial.print("\t");
+    Serial.print("targetR: ");
+    Serial.print(rotSpeedTarget);
     Serial.print("\t");
     Serial.print("rotSpeed: ");
     Serial.print(rotSpeed);
     Serial.print("\t");
-    Serial.print("b2: ");
-    Serial.print(button1);
-    Serial.print("b2: ");
-    Serial.println(button2);
+    Serial.print("ML: ");
+    Serial.print(leftMotorOutput);
+    Serial.print("\t");
+    Serial.print("MR: ");
+    Serial.print(rightMotorOutput);
+    Serial.print("\t");
+    Serial.print("pL: ");
+    Serial.print(pidL->getPidConsts().p);
+    Serial.print(" pR: ");
+    Serial.print(pidR->getPidConsts().p);
+    Serial.print("\t");
+    Serial.print(remotePid->getExtraInfo());
+
+    Serial.println();
 
 #endif
 }
@@ -100,34 +152,37 @@ void LineFollower::printAll() {
 void LineFollower::run() {
 #ifdef USE_BLUETOOTH
     remotePid->process();
-    remotePid->setExtraInfo("t: " + String(rotSpeedTarget) + " r: " + String(float(rotSpeed) / (131.0)));
+    if (remotePid->getExtraInfo()[0] == "a"[0]) {
+        toggleMotorsAreActive();
+        remotePid->setExtraInfo("b");
+    }
 #endif
+    digitalWrite(led2Pin, motorsAreActive ? HIGH : LOW);
     updateButtons();
     if (!gyroWasCalibrated) {
-        Serial.println(button1);
-        Serial.println(button2);
-        if (button1) {
-            digitalWrite(led1Pin, HIGH);
-            delay(1000);
-
+        digitalWrite(led1Pin, HIGH);
+        digitalWrite(led2Pin, HIGH);
+        if (gyro->calibrate()) {
+            digitalWrite(led1Pin, LOW);
             digitalWrite(led2Pin, LOW);
-            if (gyro->calibrate()) {
-                digitalWrite(led1Pin, LOW);
-                gyroWasCalibrated = true;
-            }
+            gyroWasCalibrated = true;
         }
-        delay(200);
-        return;
     }
     sensorArray->updateSensorsArray();
-    sensorInput = calculateInput(sensorArray->sensorsDigital);
+    sensorInput = calculateInput(sensorArray->sensorProcessed);
     gyro->update();
 
     rotSpeedTarget = calculateTargetRotSpeed(sensorTarget - sensorInput);
-    rotSpeed = gyro->gyroscope.z;
+    rotSpeed = gyro->rotationSpeed;
 
-    pidResult = pid->calculate(rotSpeed - rotSpeedTarget);
+    if (motorsAreActive) {
+        pidResult += pidL->calculate(rotSpeed - rotSpeedTarget);
 
+        updateMotors();
+    } else {
+        pidResult = 0;
+        motors->coast();
+    }
     printAll();
 
     delay(20);

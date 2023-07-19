@@ -21,13 +21,20 @@
 
 class SensorArray {
    public:
+    enum LineColor {
+        WHITE,
+        BLACK
+    };
+
     SensorArray(
         uint8_t multiplexerIOPin,
         uint8_t multiplexerS0Pin,
         uint8_t multiplexerS1Pin,
         uint8_t multiplexerS2Pin,
         uint8_t ledSelector1Pin,
-        uint8_t ledSelector2Pin);
+        uint8_t ledSelector2Pin,
+        LineColor colorOfTheLine,
+        bool useAnalogSensors);
 
     void initialize();
 
@@ -35,25 +42,27 @@ class SensorArray {
 
     void calibrateSensors();
 
-    void printAllAnalog();
-    void printAllDigital();
+    void printAllRaw();
+    void printAllProcessed();
 
     /*
         Returns the analog read of a sensor, receives an index;
 
         DOES NOT CHECK FOR THE LED
     */
-    uint16_t analogReadSensorAt(uint8_t sensorIndex);
-    uint16_t digitalReadSensorAt(uint8_t sensorIndex);
+    uint16_t readSensorAt(uint8_t sensorIndex);
 
-    uint16_t sensorsAnalog[N_OF_SENSORS];
-    bool sensorsDigital[N_OF_SENSORS];
+    uint16_t sensorRaw[N_OF_SENSORS];
+    bool sensorProcessed[N_OF_SENSORS];
+
+    bool readsAnalog = true;
+    LineColor lineColor = WHITE;
 
    private:
     // Turns the multiplexer pins to select a pin, receives an index
     void selectSensor(uint8_t sensorIndex);
 
-    void updateDigitalValueOfSensors();
+    void processReadings();
 
     uint8_t mplxIOPin;
     uint8_t mplxS0Pin;

@@ -64,6 +64,8 @@ class Gyro {
     Vec3 accelerometer;
     Vec3 gyroscope;
 
+    float rotationSpeed;
+
    private:
     MPU6050 accelGyro;
 };
