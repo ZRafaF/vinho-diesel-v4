@@ -17,8 +17,7 @@
 LineFollower::LineFollower(
     SensorArray& sensArrRef,
     Gyro& gyroRef,
-    PIDestal& pidLRef,
-    PIDestal& pidRRef,
+    PIDestal& pidRef,
     Tb6612fng& motorsRef,
 #ifdef USE_BLUETOOTH
     PIDestalRemoteBLE& remotePidRef,
@@ -29,10 +28,8 @@ LineFollower::LineFollower(
     uint8_t inputButton2) {
     sensorArray = &sensArrRef;
     gyro = &gyroRef;
-    pidL = &pidLRef;
-    pidL->errorTolerance = 1;
-    pidR = &pidRRef;
-    pidR->errorTolerance = 1;
+    pid = &pidRef;
+    pid->errorTolerance = 1;
     motors = &motorsRef;
 #ifdef USE_BLUETOOTH
     remotePid = &remotePidRef;
@@ -98,9 +95,9 @@ float LineFollower::calculateTargetRotSpeed(float error) {
     float errorSignal = error / absError;
     if (absError > 0 && absError <= 1) return errorSignal * 10;
     if (absError > 1 && absError <= 2) return errorSignal * 20;
-    if (absError > 2 && absError <= 3) return errorSignal * 30;
-    if (absError > 3 && absError <= 4) return errorSignal * 40;
-    if (absError > 4) return errorSignal * 50;
+    if (absError > 2 && absError <= 3) return errorSignal * 40;
+    if (absError > 3 && absError <= 4) return errorSignal * 60;
+    if (absError > 4) return errorSignal * 90;
 
     return (error * error) * 2;
 }
@@ -136,12 +133,6 @@ void LineFollower::printAll() {
     Serial.print("\t");
     Serial.print("MR: ");
     Serial.print(rightMotorOutput);
-    Serial.print("\t");
-    Serial.print("pL: ");
-    Serial.print(pidL->getPidConsts().p);
-    Serial.print(" pR: ");
-    Serial.print(pidR->getPidConsts().p);
-    Serial.print("\t");
     Serial.print(remotePid->getExtraInfo());
 
     Serial.println();
@@ -176,7 +167,7 @@ void LineFollower::run() {
     rotSpeed = gyro->rotationSpeed;
 
     if (motorsAreActive) {
-        pidResult += pidL->calculate(rotSpeed - rotSpeedTarget);
+        pidResult += pid->calculate(rotSpeed - rotSpeedTarget);
 
         updateMotors();
     } else {

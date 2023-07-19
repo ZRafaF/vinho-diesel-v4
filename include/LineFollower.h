@@ -31,8 +31,7 @@ class LineFollower {
     LineFollower(
         SensorArray& sensArrRef,
         Gyro& gyroRef,
-        PIDestal& pidLRef,
-        PIDestal& pidRRef,
+        PIDestal& pidRef,
         Tb6612fng& motorsRef,
 #ifdef USE_BLUETOOTH
         PIDestalRemoteBLE& remotePidRef,
@@ -64,8 +63,7 @@ class LineFollower {
     void toggleMotorsAreActive();
 
     SensorArray* sensorArray;
-    PIDestal* pidL;
-    PIDestal* pidR;
+    PIDestal* pid;
 #ifdef USE_BLUETOOTH
     PIDestalRemoteBLE* remotePid;
 #endif
@@ -84,8 +82,8 @@ class LineFollower {
     bool motorsAreActive = false;
     unsigned long lastPressedButtonTime = 0;
 
-    float motorOffset = 0.2;
-    float motorClamp = 0.4;
+    float motorOffset = 0.3;
+    float motorClamp = 0.5;
 
     float rotSpeed;        // Speed of rotation
     float rotSpeedTarget;  // Speed of rotation
