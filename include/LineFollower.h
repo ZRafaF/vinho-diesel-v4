@@ -48,6 +48,7 @@ class LineFollower {
 
     // Prints all parameters
     void printAll();
+    void toggleMotorsAreActive();
 
    private:
     /*
@@ -59,8 +60,6 @@ class LineFollower {
     void updateMotors();
 
     void updateButtons();
-
-    void toggleMotorsAreActive();
 
     SensorArray* sensorArray;
     PIDestal* pid;

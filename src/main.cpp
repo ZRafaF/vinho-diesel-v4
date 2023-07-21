@@ -71,6 +71,10 @@ LineFollower myLineFollower(
     INPUT_BTN_1,
     INPUT_BTN_2);
 
+void startStop() {
+    myLineFollower.toggleMotorsAreActive();
+}
+
 void setup() {
     Wire.setPins(SDA_PIN, SCL_PIN);
     Wire.begin();
@@ -82,6 +86,14 @@ void setup() {
 #endif
 
     myLineFollower.initialize();
+
+#ifdef USE_BLUETOOTH
+
+    PIDestalRemoteBLE::FunctionPointer functions[] = {startStop};
+
+    myRemotePid.setCallbackFunctions(functions, 1);
+
+#endif
 }
 
 void loop() {
