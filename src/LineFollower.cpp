@@ -68,7 +68,7 @@ void LineFollower::updateButtons() {
 
 void LineFollower::toggleMotorsAreActive() {
     unsigned long currentTime = millis();
-    if (currentTime > lastPressedButtonTime + 500) {
+    if (currentTime > lastPressedButtonTime + 200) {
         lastPressedButtonTime = currentTime;
         motorsAreActive = !motorsAreActive;
     }
@@ -92,14 +92,17 @@ float LineFollower::calculateInput(bool sensorsProcessed[N_OF_SENSORS]) {
 
 float LineFollower::calculateTargetRotSpeed(float error) {
     float absError = abs(error);
+    if (error == 0) return 0;
     float errorSignal = error / absError;
+    /*
     if (absError > 0 && absError <= 1) return errorSignal * 10;
     if (absError > 1 && absError <= 2) return errorSignal * 20;
-    if (absError > 2 && absError <= 3) return errorSignal * 40;
-    if (absError > 3 && absError <= 4) return errorSignal * 60;
-    if (absError > 4) return errorSignal * 90;
+    if (absError > 2 && absError <= 3) return errorSignal * 50;
+    if (absError > 3 && absError <= 4) return errorSignal * 80;
+    if (absError > 4) return errorSignal * 190;
+    */
 
-    return (error * error) * 2;
+    return (error * error) * 5 * errorSignal;
 }
 
 void LineFollower::updateMotors() {

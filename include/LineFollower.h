@@ -81,13 +81,11 @@ class LineFollower {
     bool motorsAreActive = false;
     unsigned long lastPressedButtonTime = 0;
 
-    float motorOffset = 0.3;
-    float motorClamp = 0.5;
+    float motorOffset = 0.5;
+    float motorClamp = 1;
 
     float rotSpeed;        // Speed of rotation
     float rotSpeedTarget;  // Speed of rotation
-
-    float Kp = 2, Ki = 5, Kd = 1;
 
     uint8_t
         led1Pin,

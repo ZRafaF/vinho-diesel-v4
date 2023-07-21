@@ -38,7 +38,7 @@ SensorArray mySens(
     MPLX_S2,
     LED_SELEC_1,
     LED_SELEC_2,
-    SensorArray::WHITE,
+    SensorArray::BLACK,
     false);
 
 Gyro myGyro;
