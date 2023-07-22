@@ -28,10 +28,16 @@
 
 class LineFollower {
    public:
+    enum ControllerType {
+        SENSOR,
+        GYRO
+    };
+
     LineFollower(
         SensorArray& sensArrRef,
         Gyro& gyroRef,
-        PIDestal& pidRef,
+        PIDestal& sensorPidRef,
+        PIDestal& gyroPidRef,
         Tb6612fng& motorsRef,
 #ifdef USE_BLUETOOTH
         PIDestalRemoteBLE& remotePidRef,
@@ -48,6 +54,7 @@ class LineFollower {
 
     // Prints all parameters
     void printAll();
+
     void toggleMotorsAreActive();
 
    private:
@@ -62,7 +69,8 @@ class LineFollower {
     void updateButtons();
 
     SensorArray* sensorArray;
-    PIDestal* pid;
+    PIDestal* sensorPid;
+    PIDestal* gyroPid;
 #ifdef USE_BLUETOOTH
     PIDestalRemoteBLE* remotePid;
 #endif
@@ -73,7 +81,9 @@ class LineFollower {
     float sensorInput;                  // Input
     float lastValidSensorInput = 3.5f;  // Last input
 
-    float pidResult = 0;
+    float sensorPidResult = 0;
+
+    float gyroPidResult = 0;
     float errorGain = 0.001;
 
     float leftMotorOutput;
@@ -81,11 +91,13 @@ class LineFollower {
     bool motorsAreActive = false;
     unsigned long lastPressedButtonTime = 0;
 
-    float motorOffset = 0.5;
-    float motorClamp = 1;
+    float motorOffsetSlow = 0.5;
+    float motorOffsetFast = 1;
+    float motorClamp = 1.0;
 
     float rotSpeed;        // Speed of rotation
     float rotSpeedTarget;  // Speed of rotation
+    float rotSpeedThreshold = 90.0f;
 
     uint8_t
         led1Pin,
@@ -97,6 +109,8 @@ class LineFollower {
     bool button2 = true;
 
     bool gyroWasCalibrated = false;
+
+    ControllerType currentController = SENSOR;
 };
 
 #endif  // LINE_FOLLOWER_H

@@ -52,16 +52,18 @@ Tb6612fng myMotors(
     BIN_2,
     PWM_B);
 
-PIDestal myPid(0.60, 0.00001, 0.10);
+PIDestal sensorsPid(0.60, 0.00001, 0.10);
+PIDestal gyroPid(0.60, 0.00001, 0.10);
 
 #ifdef USE_BLUETOOTH
-PIDestalRemoteBLE myRemotePid(&myPid);
+PIDestalRemoteBLE myRemotePid(&sensorsPid);
 #endif
 
 LineFollower myLineFollower(
     mySens,
     myGyro,
-    myPid,
+    sensorsPid,
+    gyroPid,
     myMotors,
 #ifdef USE_BLUETOOTH
     myRemotePid,

@@ -17,7 +17,8 @@
 LineFollower::LineFollower(
     SensorArray& sensArrRef,
     Gyro& gyroRef,
-    PIDestal& pidRef,
+    PIDestal& sensorPidRef,
+    PIDestal& gyroPidRef,
     Tb6612fng& motorsRef,
 #ifdef USE_BLUETOOTH
     PIDestalRemoteBLE& remotePidRef,
@@ -28,8 +29,10 @@ LineFollower::LineFollower(
     uint8_t inputButton2) {
     sensorArray = &sensArrRef;
     gyro = &gyroRef;
-    pid = &pidRef;
-    pid->errorTolerance = 1;
+    gyroPid = &gyroPidRef;
+    gyroPid->errorTolerance = 1;
+    sensorPid = &sensorPidRef;
+    sensorPid->errorTolerance = 0;
     motors = &motorsRef;
 #ifdef USE_BLUETOOTH
     remotePid = &remotePidRef;
@@ -106,8 +109,13 @@ float LineFollower::calculateTargetRotSpeed(float error) {
 }
 
 void LineFollower::updateMotors() {
-    leftMotorOutput = motorOffset + (pidResult * errorGain);
-    rightMotorOutput = motorOffset - (pidResult * errorGain);
+    if (currentController == SENSOR) {
+        leftMotorOutput = motorOffsetSlow + (sensorPidResult * errorGain);
+        rightMotorOutput = motorOffsetSlow - (sensorPidResult * errorGain);
+    } else {
+        leftMotorOutput = motorOffsetSlow + (gyroPidResult * errorGain);
+        rightMotorOutput = motorOffsetSlow - (gyroPidResult * errorGain);
+    }
 
     if (leftMotorOutput > motorClamp) leftMotorOutput = motorClamp;
     if (leftMotorOutput < -motorClamp) leftMotorOutput = -motorClamp;
@@ -123,7 +131,7 @@ void LineFollower::printAll() {
     Serial.print(sensorInput);
     Serial.print("\t");
     Serial.print("pidR: ");
-    Serial.print(pidResult);
+    Serial.print(gyroPidResult);
     Serial.print("\t");
     Serial.print("targetR: ");
     Serial.print(rotSpeedTarget);
@@ -169,12 +177,17 @@ void LineFollower::run() {
     rotSpeedTarget = calculateTargetRotSpeed(sensorTarget - sensorInput);
     rotSpeed = gyro->rotationSpeed;
 
+    currentController = rotSpeed > rotSpeedThreshold
+                            ? GYRO
+                            : SENSOR;
+
     if (motorsAreActive) {
-        pidResult += pid->calculate(rotSpeed - rotSpeedTarget);
+        sensorPidResult += sensorPid->calculate(sensorTarget - sensorInput);
+        gyroPidResult += gyroPid->calculate(rotSpeed - rotSpeedTarget);
 
         updateMotors();
     } else {
-        pidResult = 0;
+        gyroPidResult = 0;
         motors->coast();
     }
     printAll();
