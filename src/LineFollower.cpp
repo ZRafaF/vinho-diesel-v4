@@ -32,7 +32,10 @@ LineFollower::LineFollower(
     gyroPid = &gyroPidRef;
     gyroPid->errorTolerance = 1;
     sensorPid = &sensorPidRef;
-    sensorPid->errorTolerance = 1;
+    sensorPid->errorTolerance = 0;
+    sensorPid->setUseDeltaTime(false);
+    gyroPid->setUseDeltaTime(false);
+
     motors = &motorsRef;
 #ifdef USE_BLUETOOTH
     remotePid = &remotePidRef;
@@ -87,7 +90,7 @@ float LineFollower::calculateInput(bool sensorsProcessed[N_OF_SENSORS]) {
         }
     }
     if (numberOfActiveSensors) {
-        const float inputResult = total / numberOfActiveSensors;
+        const float inputResult = total / float(numberOfActiveSensors);
         lastValidSensorInput = inputResult;
     }
     isOutOfLine = numberOfActiveSensors == 0 ? true : false;
@@ -115,7 +118,7 @@ void LineFollower::updateMotors() {
         pidResult += gyroPidResult * errorGain;
 
     } else {
-        pidResult += sensorPidResult * errorGain;
+        pidResult += sensorPidResult * 0.1;
     }
     if (pidResult > 1) pidResult = 1;
     if (pidResult < -1) pidResult = -1;
@@ -128,7 +131,7 @@ void LineFollower::updateMotors() {
     if (rightMotorOutput > motorClamp) rightMotorOutput = motorClamp;
     if (rightMotorOutput < -motorClamp) rightMotorOutput = -motorClamp;
 
-    motors->drive(leftMotorOutput, rightMotorOutput);
+    // motors->drive(leftMotorOutput, rightMotorOutput);
 }
 
 void LineFollower::printAll() {
@@ -136,7 +139,10 @@ void LineFollower::printAll() {
     Serial.print("input: ");
     Serial.print(sensorInput);
     Serial.print("\t");
-    Serial.print("pidR: ");
+    Serial.print("SpidR: ");
+    Serial.print(sensorPidResult);
+    Serial.print("\t");
+    Serial.print("GpidR: ");
     Serial.print(gyroPidResult);
     Serial.print("\t");
     Serial.print("targetR: ");
