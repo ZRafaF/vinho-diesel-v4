@@ -38,7 +38,7 @@ SensorArray mySens(
     MPLX_S2,
     LED_SELEC_1,
     LED_SELEC_2,
-    SensorArray::BLACK,
+    SensorArray::WHITE,
     false);
 
 Gyro myGyro;
@@ -52,11 +52,13 @@ Tb6612fng myMotors(
     BIN_2,
     PWM_B);
 
-PIDestal sensorsPid(0.60, 0.00001, 0.10);
+PIDestal sensorsPid(0.3, 0.0000001, 0.655);
 PIDestal gyroPid(0.60, 0.00001, 0.10);
 
 #ifdef USE_BLUETOOTH
-PIDestalRemoteBLE myRemotePid(&sensorsPid);
+PIDestal* pidArray[] = {&sensorsPid, &gyroPid};
+
+PIDestalRemoteBLE myRemotePid(pidArray, 2);
 #endif
 
 LineFollower myLineFollower(

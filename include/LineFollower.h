@@ -68,6 +68,8 @@ class LineFollower {
 
     void updateButtons();
 
+    float calculateSensorReadingError(float error);
+
     SensorArray* sensorArray;
     PIDestal* sensorPid;
     PIDestal* gyroPid;
@@ -82,6 +84,7 @@ class LineFollower {
     float lastValidSensorInput = 3.5f;  // Last input
 
     float sensorPidResult = 0;
+    float pidResult = 0;
 
     float gyroPidResult = 0;
     float errorGain = 0.001;
@@ -93,7 +96,7 @@ class LineFollower {
 
     float motorOffsetSlow = 0.5;
     float motorOffsetFast = 1;
-    float motorClamp = 1.0;
+    float motorClamp = 0.7;
 
     float rotSpeed;        // Speed of rotation
     float rotSpeedTarget;  // Speed of rotation
@@ -109,6 +112,8 @@ class LineFollower {
     bool button2 = true;
 
     bool gyroWasCalibrated = false;
+
+    bool isOutOfLine = true;
 
     ControllerType currentController = SENSOR;
 };
