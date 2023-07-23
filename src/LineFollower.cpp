@@ -30,7 +30,7 @@ LineFollower::LineFollower(
     sensorArray = &sensArrRef;
     gyro = &gyroRef;
     gyroPid = &gyroPidRef;
-    gyroPid->errorTolerance = 1;
+    gyroPid->errorTolerance = 0;
     sensorPid = &sensorPidRef;
     sensorPid->errorTolerance = 0;
     sensorPid->setUseDeltaTime(false);
@@ -102,27 +102,23 @@ float LineFollower::calculateTargetRotSpeed(float error) {
     if (error == 0) return 0;
     float absError = abs(error);
     float errorSignal = error / absError;
-    /*
-    if (absError > 0 && absError <= 1) return errorSignal * 10;
-    if (absError > 1 && absError <= 2) return errorSignal * 20;
-    if (absError > 2 && absError <= 3) return errorSignal * 50;
-    if (absError > 3 && absError <= 4) return errorSignal * 80;
-    if (absError > 4) return errorSignal * 190;
-    */
 
-    return (error * 20);
+    if (absError > 0 && absError <= 1) return error * 20;
+    if (absError > 1 && absError <= 2) return error * 30;
+    if (absError > 2 && absError <= 3) return error * 30;
+    if (absError > 3 && absError <= 4) return error * 40;
+    if (absError > 4) return error * 50;
+
+    return (error * 0);
 }
 
 void LineFollower::updateMotors() {
     if (currentController == GYRO || isOutOfLine) {
-        pidResult += gyroPidResult * errorGain;
+        pidResult = gyroPidResult * errorGain;
 
     } else {
-        pidResult += sensorPidResult * 0.1;
+        pidResult = sensorPidResult * 0.1;
     }
-    if (pidResult > 1) pidResult = 1;
-    if (pidResult < -1) pidResult = -1;
-
     leftMotorOutput = motorOffsetSlow - pidResult;
     rightMotorOutput = motorOffsetSlow + pidResult;
 
@@ -131,7 +127,7 @@ void LineFollower::updateMotors() {
     if (rightMotorOutput > motorClamp) rightMotorOutput = motorClamp;
     if (rightMotorOutput < -motorClamp) rightMotorOutput = -motorClamp;
 
-    // motors->drive(leftMotorOutput, rightMotorOutput);
+    motors->drive(leftMotorOutput, rightMotorOutput);
 }
 
 void LineFollower::printAll() {

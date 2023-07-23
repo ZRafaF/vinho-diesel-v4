@@ -87,7 +87,7 @@ class LineFollower {
     float pidResult = 0;
 
     float gyroPidResult = 0;
-    float errorGain = 0.001;
+    float errorGain = 0.01;
 
     float leftMotorOutput;
     float rightMotorOutput;
