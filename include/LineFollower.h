@@ -96,7 +96,7 @@ class LineFollower {
 
     float motorOffsetSlow = 0.5;
     float motorOffsetFast = 1;
-    float motorClamp = 0.7;
+    float motorClamp = 1.0f;
 
     float rotSpeed;        // Speed of rotation
     float rotSpeedTarget;  // Speed of rotation
@@ -115,7 +115,7 @@ class LineFollower {
 
     bool isOutOfLine = true;
 
-    ControllerType currentController = SENSOR;
+    ControllerType currentController = GYRO;
 };
 
 #endif  // LINE_FOLLOWER_H

@@ -99,13 +99,12 @@ float LineFollower::calculateTargetRotSpeed(float error) {
     if (error == 0) return 0;
     float absError = abs(error);
     float errorSignal = error / absError;
-    /*
-    if (absError > 0 && absError <= 1) return errorSignal * 10;
-    if (absError > 1 && absError <= 2) return errorSignal * 20;
-    if (absError > 2 && absError <= 3) return errorSignal * 50;
-    if (absError > 3 && absError <= 4) return errorSignal * 80;
-    if (absError > 4) return errorSignal * 190;
-    */
+
+    if (absError > 0 && absError <= 1) return error * 10;
+    if (absError > 1 && absError <= 2) return error * 20;
+    if (absError > 2 && absError <= 3) return error * 20;
+    if (absError > 3 && absError <= 4) return error * 20;
+    if (absError > 4) return error * 20;
 
     return (error * 20);
 }
@@ -192,9 +191,12 @@ void LineFollower::run() {
     rotSpeedTarget = calculateTargetRotSpeed(sensorTarget - sensorInput);
     rotSpeed = gyro->rotationSpeed;
 
+    /*
     currentController = rotSpeed > rotSpeedThreshold
                             ? GYRO
                             : SENSOR;
+    */
+    currentController = GYRO;
 
     if (motorsAreActive) {
         sensorPidResult = sensorPid->calculate(calculateSensorReadingError(sensorTarget - sensorInput));

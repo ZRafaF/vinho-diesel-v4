@@ -38,7 +38,7 @@ SensorArray mySens(
     MPLX_S2,
     LED_SELEC_1,
     LED_SELEC_2,
-    SensorArray::WHITE,
+    SensorArray::BLACK,
     false);
 
 Gyro myGyro;
@@ -53,7 +53,7 @@ Tb6612fng myMotors(
     PWM_B);
 
 PIDestal sensorsPid(0.3, 0.0000001, 0.655);
-PIDestal gyroPid(0.60, 0.00001, 0.10);
+PIDestal gyroPid(1.00, 0.00001, 0.01);
 
 #ifdef USE_BLUETOOTH
 PIDestal* pidArray[] = {&sensorsPid, &gyroPid};
