@@ -14,6 +14,14 @@
 
 #include "LineFollower.h"
 
+float invertedMap(float input, float inMin, float inMax, float outMin, float outMax) {
+    // Invert the input value
+    float invertedValue = inMax + inMin - input;
+
+    // Map the inverted value to the output range
+    return outMin + (outMax - outMin) * (invertedValue - inMin) / (inMax - inMin);
+}
+
 LineFollower::LineFollower(
     SensorArray& sensArrRef,
     Gyro& gyroRef,
@@ -101,15 +109,15 @@ float LineFollower::calculateInput(bool sensorsProcessed[N_OF_SENSORS]) {
 float LineFollower::calculateTargetRotSpeed(float error) {
     if (error == 0) return 0;
     float absError = abs(error);
-    float errorSignal = error / absError;
+    return (error * 40);
 
     if (absError > 0 && absError <= 1) return error * 20;
-    if (absError > 1 && absError <= 2) return error * 30;
+    if (absError > 1 && absError <= 2) return error * 25;
     if (absError > 2 && absError <= 3) return error * 30;
-    if (absError > 3 && absError <= 4) return error * 40;
-    if (absError > 4) return error * 50;
+    if (absError > 3 && absError <= 4) return error * 35;
+    if (absError > 4) return error * 40;
 
-    return (error * 0);
+    return (error * 20);
 }
 
 void LineFollower::updateMotors() {
@@ -119,8 +127,8 @@ void LineFollower::updateMotors() {
     } else {
         pidResult = sensorPidResult * 0.1;
     }
-    leftMotorOutput = motorOffsetSlow - pidResult;
-    rightMotorOutput = motorOffsetSlow + pidResult;
+    leftMotorOutput = motorOffset - pidResult;
+    rightMotorOutput = motorOffset + pidResult;
 
     if (leftMotorOutput > motorClamp) leftMotorOutput = motorClamp;
     if (leftMotorOutput < -motorClamp) leftMotorOutput = -motorClamp;
@@ -147,6 +155,9 @@ void LineFollower::printAll() {
     Serial.print("rotSpeed: ");
     Serial.print(rotSpeed);
     Serial.print("\t");
+    Serial.print("MOfst: ");
+    Serial.print(motorOffset);
+    Serial.print("\t");
     Serial.print("ML: ");
     Serial.print(leftMotorOutput);
     Serial.print("\t");
@@ -165,6 +176,14 @@ float LineFollower::calculateSensorReadingError(float error) {
     float errorSignal = error / absError;
 
     return error;
+}
+
+float LineFollower::calculateMotorOffset() {
+    const float minMapRotSpeed = 5.0;
+    const float maxMapRotSpeed = 90.0;
+    const float constrainedRot = constrain(abs(rotSpeed), minMapRotSpeed, maxMapRotSpeed);
+
+    return invertedMap(constrainedRot, minMapRotSpeed, maxMapRotSpeed, 0.5, 1.0);
 }
 
 void LineFollower::run() {
@@ -197,6 +216,8 @@ void LineFollower::run() {
     currentController = rotSpeed > rotSpeedThreshold
                             ? GYRO
                             : SENSOR;
+
+    motorOffset = calculateMotorOffset();
 
     if (motorsAreActive) {
         sensorPidResult = sensorPid->calculate(calculateSensorReadingError(sensorTarget - sensorInput));

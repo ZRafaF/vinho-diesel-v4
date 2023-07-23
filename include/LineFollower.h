@@ -26,6 +26,8 @@
 #include "SensorArray.h"
 #include "TB6612FNG.h"
 
+float invertedMap(float input, float inMin, float inMax, float outMin, float outMax);
+
 class LineFollower {
    public:
     enum ControllerType {
@@ -70,6 +72,8 @@ class LineFollower {
 
     float calculateSensorReadingError(float error);
 
+    float calculateMotorOffset();
+
     SensorArray* sensorArray;
     PIDestal* sensorPid;
     PIDestal* gyroPid;
@@ -94,13 +98,12 @@ class LineFollower {
     bool motorsAreActive = false;
     unsigned long lastPressedButtonTime = 0;
 
-    float motorOffsetSlow = 0.5;
-    float motorOffsetFast = 1;
-    float motorClamp = 0.7;
+    float motorOffset = 0.5;
+    float motorClamp = 1;
 
     float rotSpeed;        // Speed of rotation
     float rotSpeedTarget;  // Speed of rotation
-    float rotSpeedThreshold = 90.0f;
+    float rotSpeedThreshold = 45.0f;
 
     uint8_t
         led1Pin,
