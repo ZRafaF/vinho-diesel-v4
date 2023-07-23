@@ -52,20 +52,20 @@ Tb6612fng myMotors(
     BIN_2,
     PWM_B);
 
-PIDestal myPidL(0.050, 0.00001, 0.10);
-PIDestal myPidR(0.050, 0.00001, 0.10);
-
-PIDestal* pidsArray[] = {&myPidL, &myPidR};
+PIDestal sensorsPid(1.8, 0.02, 3);
+PIDestal gyroPid(0.80, 0.00001, 0.90);
 
 #ifdef USE_BLUETOOTH
-PIDestalRemoteBLE myRemotePid(pidsArray, 2);
+PIDestal* pidArray[] = {&sensorsPid, &gyroPid};
+
+PIDestalRemoteBLE myRemotePid(pidArray, 2);
 #endif
 
 LineFollower myLineFollower(
     mySens,
     myGyro,
-    myPidL,
-    myPidR,
+    sensorsPid,
+    gyroPid,
     myMotors,
 #ifdef USE_BLUETOOTH
     myRemotePid,
@@ -74,6 +74,10 @@ LineFollower myLineFollower(
     STATUS_LED_2,
     INPUT_BTN_1,
     INPUT_BTN_2);
+
+void startStop() {
+    myLineFollower.toggleMotorsAreActive();
+}
 
 void setup() {
     Wire.setPins(SDA_PIN, SCL_PIN);
@@ -86,6 +90,14 @@ void setup() {
 #endif
 
     myLineFollower.initialize();
+
+#ifdef USE_BLUETOOTH
+
+    PIDestalRemoteBLE::FunctionPointer functions[] = {startStop};
+
+    myRemotePid.setCallbackFunctions(functions, 1);
+
+#endif
 }
 
 void loop() {

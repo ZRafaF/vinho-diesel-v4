@@ -26,13 +26,20 @@
 #include "SensorArray.h"
 #include "TB6612FNG.h"
 
+float invertedMap(float input, float inMin, float inMax, float outMin, float outMax);
+
 class LineFollower {
    public:
+    enum ControllerType {
+        SENSOR,
+        GYRO
+    };
+
     LineFollower(
         SensorArray& sensArrRef,
         Gyro& gyroRef,
-        PIDestal& pidLRef,
-        PIDestal& pidRRef,
+        PIDestal& sensorPidRef,
+        PIDestal& gyroPidRef,
         Tb6612fng& motorsRef,
 #ifdef USE_BLUETOOTH
         PIDestalRemoteBLE& remotePidRef,
@@ -50,6 +57,8 @@ class LineFollower {
     // Prints all parameters
     void printAll();
 
+    void toggleMotorsAreActive();
+
    private:
     /*
         Receives an array of booleans representing the current
@@ -61,11 +70,13 @@ class LineFollower {
 
     void updateButtons();
 
-    void toggleMotorsAreActive();
+    float calculateSensorReadingError(float error);
+
+    float calculateMotorOffset();
 
     SensorArray* sensorArray;
-    PIDestal* pidL;
-    PIDestal* pidR;
+    PIDestal* sensorPid;
+    PIDestal* gyroPid;
 #ifdef USE_BLUETOOTH
     PIDestalRemoteBLE* remotePid;
 #endif
@@ -76,21 +87,23 @@ class LineFollower {
     float sensorInput;                  // Input
     float lastValidSensorInput = 3.5f;  // Last input
 
+    float sensorPidResult = 0;
     float pidResult = 0;
-    float errorGain = 0.001;
+
+    float gyroPidResult = 0;
+    float errorGain = 0.01;
 
     float leftMotorOutput;
     float rightMotorOutput;
     bool motorsAreActive = false;
     unsigned long lastPressedButtonTime = 0;
 
-    float motorOffset = 0.2;
-    float motorClamp = 0.4;
+    float motorOffset = 0.5;
+    float motorClamp = 1;
 
     float rotSpeed;        // Speed of rotation
     float rotSpeedTarget;  // Speed of rotation
-
-    float Kp = 2, Ki = 5, Kd = 1;
+    float rotSpeedThreshold = 45.0f;
 
     uint8_t
         led1Pin,
@@ -102,6 +115,10 @@ class LineFollower {
     bool button2 = true;
 
     bool gyroWasCalibrated = false;
+
+    bool isOutOfLine = true;
+
+    ControllerType currentController = SENSOR;
 };
 
 #endif  // LINE_FOLLOWER_H
