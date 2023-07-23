@@ -104,20 +104,18 @@ float LineFollower::calculateTargetRotSpeed(float error) {
     if (absError > 1 && absError <= 2) return error * 20;
     if (absError > 2 && absError <= 3) return error * 20;
     if (absError > 3 && absError <= 4) return error * 20;
-    if (absError > 4) return error * 20;
+    if (absError > 4) return error * 30;
 
     return (error * 20);
 }
 
 void LineFollower::updateMotors() {
     if (currentController == GYRO || isOutOfLine) {
-        pidResult += gyroPidResult * errorGain;
+        pidResult = gyroPidResult * errorGain;
 
     } else {
         pidResult += sensorPidResult * errorGain;
     }
-    if (pidResult > 1) pidResult = 1;
-    if (pidResult < -1) pidResult = -1;
 
     leftMotorOutput = motorOffsetSlow - pidResult;
     rightMotorOutput = motorOffsetSlow + pidResult;
@@ -136,7 +134,7 @@ void LineFollower::printAll() {
     Serial.print(sensorInput);
     Serial.print("\t");
     Serial.print("pidR: ");
-    Serial.print(gyroPidResult);
+    Serial.print(pidResult);
     Serial.print("\t");
     Serial.print("targetR: ");
     Serial.print(rotSpeedTarget);
@@ -199,7 +197,7 @@ void LineFollower::run() {
     currentController = GYRO;
 
     if (motorsAreActive) {
-        sensorPidResult = sensorPid->calculate(calculateSensorReadingError(sensorTarget - sensorInput));
+        // sensorPidResult = sensorPid->calculate(calculateSensorReadingError(sensorTarget - sensorInput));
         gyroPidResult = gyroPid->calculate(rotSpeedTarget - rotSpeed);
         updateMotors();
     } else {
