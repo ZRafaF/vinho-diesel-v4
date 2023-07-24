@@ -14,6 +14,8 @@
 #define MPLX_S2 21
 #define LED_SELEC_1 10
 #define LED_SELEC_2 12
+#define LEFT_HELPER_SENS 1
+#define RIGHT_HELPER_SENS 8
 
 #define SDA_PIN 16
 #define SCL_PIN 15
@@ -31,6 +33,20 @@
 #define BIN_2 4
 #define PWM_B 2
 
+#define USE_ANALOG false
+#define LINE_COLOR BLACK  // BLACK | WHITE
+
+#if LINE_COLOR == WHITE
+#define HELPER_INTERRUPT_MODE RISING
+
+#elif LINE_COLOR == WHITE
+#define HELPER_INTERRUPT_MODE FALLING
+
+#else
+#error "Invalid LINE_COLOR value"
+
+#endif
+
 SensorArray mySens(
     MIO,
     MPLX_S0,
@@ -38,8 +54,10 @@ SensorArray mySens(
     MPLX_S2,
     LED_SELEC_1,
     LED_SELEC_2,
-    SensorArray::BLACK,
-    false);
+    LEFT_HELPER_SENS,
+    RIGHT_HELPER_SENS,
+    SensorArray::LINE_COLOR,
+    USE_ANALOG);
 
 Gyro myGyro;
 
@@ -79,6 +97,12 @@ void startStop() {
     myLineFollower.toggleMotorsAreActive();
 }
 
+void leftSensInterrupt() {
+}
+
+void rightSensInterrupt() {
+}
+
 void setup() {
     Wire.setPins(SDA_PIN, SCL_PIN);
     Wire.begin();
@@ -96,6 +120,8 @@ void setup() {
     PIDestalRemoteBLE::FunctionPointer functions[] = {startStop};
 
     myRemotePid.setCallbackFunctions(functions, 1);
+    attachInterrupt(LEFT_HELPER_SENS, leftSensInterrupt, HELPER_INTERRUPT_MODE);
+    attachInterrupt(RIGHT_HELPER_SENS, rightSensInterrupt, HELPER_INTERRUPT_MODE);
 
 #endif
 }

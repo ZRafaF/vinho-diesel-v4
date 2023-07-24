@@ -19,14 +19,18 @@ SensorArray::SensorArray(uint8_t multiplexerIOPin,
                          uint8_t multiplexerS2Pin,
                          uint8_t ledSelector1Pin,
                          uint8_t ledSelector2Pin,
+                         uint8_t leftHelperPin,
+                         uint8_t rightHelperPin,
                          LineColor colorOfTheLine,
                          bool useAnalogSensors) {
-    mplxIOPin = multiplexerIOPin;
-    mplxS0Pin = multiplexerS0Pin;
-    mplxS1Pin = multiplexerS1Pin;
-    mplxS2Pin = multiplexerS2Pin;
-    ledSelec1Pin = ledSelector1Pin;
-    ledSelec2Pin = ledSelector2Pin;
+    _mplxIOPin = multiplexerIOPin;
+    _mplxS0Pin = multiplexerS0Pin;
+    _mplxS1Pin = multiplexerS1Pin;
+    _mplxS2Pin = multiplexerS2Pin;
+    _ledSelec1Pin = ledSelector1Pin;
+    _ledSelec2Pin = ledSelector2Pin;
+    _leftHelperPin = leftHelperPin;
+    _rightHelperPin = rightHelperPin;
     lineColor = colorOfTheLine;
     readsAnalog = useAnalogSensors;
 
@@ -37,12 +41,14 @@ SensorArray::SensorArray(uint8_t multiplexerIOPin,
 }
 
 void SensorArray::initialize() {
-    pinMode(mplxIOPin, INPUT);
-    pinMode(mplxS0Pin, OUTPUT);
-    pinMode(mplxS1Pin, OUTPUT);
-    pinMode(mplxS2Pin, OUTPUT);
-    pinMode(ledSelec1Pin, OUTPUT);
-    pinMode(ledSelec2Pin, OUTPUT);
+    pinMode(_mplxIOPin, INPUT);
+    pinMode(_mplxS0Pin, OUTPUT);
+    pinMode(_mplxS1Pin, OUTPUT);
+    pinMode(_mplxS2Pin, OUTPUT);
+    pinMode(_ledSelec1Pin, OUTPUT);
+    pinMode(_ledSelec2Pin, OUTPUT);
+    pinMode(_leftHelperPin, OUTPUT);
+    pinMode(_rightHelperPin, OUTPUT);
 }
 
 void SensorArray::calibrateSensors() {
@@ -60,21 +66,29 @@ void SensorArray::calibrateSensors() {
 
 void SensorArray::printAllRaw() {
 #ifdef SERIAL_DEBUG
+    Serial.print(leftSensRaw);
+    Serial.print("---");
+
     for (uint16_t i = 0; i < N_OF_SENSORS; i++) {
         Serial.print(sensorRaw[i]);
         Serial.print(",");
     }
-    Serial.println(".");
+    Serial.print("---");
+    Serial.println(rightSensRaw);
 #endif
 }
 
 void SensorArray::printAllProcessed() {
 #ifdef SERIAL_DEBUG
+    Serial.print(leftSensProcessed);
+    Serial.print("---");
+
     for (uint16_t i = 0; i < N_OF_SENSORS; i++) {
         Serial.print(sensorProcessed[i]);
         Serial.print(",");
     }
-    Serial.println(".");
+    Serial.print("---");
+    Serial.println(rightSensProcessed);
 #endif
 }
 
@@ -93,60 +107,66 @@ void SensorArray::selectSensor(uint8_t sensorIndex) {
 
     switch (sensorIndex) {
         case 6:
-            digitalWrite(mplxS0Pin, LOW);
-            digitalWrite(mplxS1Pin, LOW);
-            digitalWrite(mplxS2Pin, LOW);
+            digitalWrite(_mplxS0Pin, LOW);
+            digitalWrite(_mplxS1Pin, LOW);
+            digitalWrite(_mplxS2Pin, LOW);
             break;
         case 5:
-            digitalWrite(mplxS0Pin, LOW);
-            digitalWrite(mplxS1Pin, LOW);
-            digitalWrite(mplxS2Pin, HIGH);
+            digitalWrite(_mplxS0Pin, LOW);
+            digitalWrite(_mplxS1Pin, LOW);
+            digitalWrite(_mplxS2Pin, HIGH);
             break;
         case 4:
-            digitalWrite(mplxS0Pin, LOW);
-            digitalWrite(mplxS1Pin, HIGH);
-            digitalWrite(mplxS2Pin, LOW);
+            digitalWrite(_mplxS0Pin, LOW);
+            digitalWrite(_mplxS1Pin, HIGH);
+            digitalWrite(_mplxS2Pin, LOW);
             break;
         case 7:
-            digitalWrite(mplxS0Pin, LOW);
-            digitalWrite(mplxS1Pin, HIGH);
-            digitalWrite(mplxS2Pin, HIGH);
+            digitalWrite(_mplxS0Pin, LOW);
+            digitalWrite(_mplxS1Pin, HIGH);
+            digitalWrite(_mplxS2Pin, HIGH);
             break;
         case 3:
-            digitalWrite(mplxS0Pin, HIGH);
-            digitalWrite(mplxS1Pin, LOW);
-            digitalWrite(mplxS2Pin, LOW);
+            digitalWrite(_mplxS0Pin, HIGH);
+            digitalWrite(_mplxS1Pin, LOW);
+            digitalWrite(_mplxS2Pin, LOW);
             break;
         case 0:
-            digitalWrite(mplxS0Pin, HIGH);
-            digitalWrite(mplxS1Pin, LOW);
-            digitalWrite(mplxS2Pin, HIGH);
+            digitalWrite(_mplxS0Pin, HIGH);
+            digitalWrite(_mplxS1Pin, LOW);
+            digitalWrite(_mplxS2Pin, HIGH);
             break;
         case 2:
-            digitalWrite(mplxS0Pin, HIGH);
-            digitalWrite(mplxS1Pin, HIGH);
-            digitalWrite(mplxS2Pin, LOW);
+            digitalWrite(_mplxS0Pin, HIGH);
+            digitalWrite(_mplxS1Pin, HIGH);
+            digitalWrite(_mplxS2Pin, LOW);
             break;
         case 1:
-            digitalWrite(mplxS0Pin, HIGH);
-            digitalWrite(mplxS1Pin, HIGH);
-            digitalWrite(mplxS2Pin, HIGH);
+            digitalWrite(_mplxS0Pin, HIGH);
+            digitalWrite(_mplxS1Pin, HIGH);
+            digitalWrite(_mplxS2Pin, HIGH);
             break;
 
         default:
-            digitalWrite(mplxS0Pin, LOW);
-            digitalWrite(mplxS1Pin, LOW);
-            digitalWrite(mplxS2Pin, LOW);
+            digitalWrite(_mplxS0Pin, LOW);
+            digitalWrite(_mplxS1Pin, LOW);
+            digitalWrite(_mplxS2Pin, LOW);
             break;
     }
 }
 
 uint16_t SensorArray::readSensorAt(uint8_t sensorIndex) {
     selectSensor(sensorIndex);
-    return readsAnalog ? analogRead(mplxIOPin) : digitalRead(mplxIOPin);
+    return readsAnalog ? analogRead(_mplxIOPin) : digitalRead(_mplxIOPin);
 }
 
 void SensorArray::updateSensorsArray() {
+    leftSensRaw = digitalRead(_leftHelperPin);
+    rightSensRaw = digitalRead(_rightHelperPin);
+
+    leftSensProcessed = lineColor == BLACK ? leftSensRaw : !leftSensRaw;
+    rightSensProcessed = lineColor == BLACK ? rightSensRaw : !rightSensRaw;
+
 #ifndef LED_ALWAYS_ON
     // Sets the P-channel MOSFFET gate to LOW, turning it on
     digitalWrite(ledSelec1Pin, LOW);
