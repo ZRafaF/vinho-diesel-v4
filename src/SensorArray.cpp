@@ -19,8 +19,6 @@ SensorArray::SensorArray(uint8_t multiplexerIOPin,
                          uint8_t multiplexerS2Pin,
                          uint8_t ledSelector1Pin,
                          uint8_t ledSelector2Pin,
-                         uint8_t leftHelperPin,
-                         uint8_t rightHelperPin,
                          LineColor colorOfTheLine,
                          bool useAnalogSensors) {
     _mplxIOPin = multiplexerIOPin;
@@ -29,8 +27,6 @@ SensorArray::SensorArray(uint8_t multiplexerIOPin,
     _mplxS2Pin = multiplexerS2Pin;
     _ledSelec1Pin = ledSelector1Pin;
     _ledSelec2Pin = ledSelector2Pin;
-    _leftHelperPin = leftHelperPin;
-    _rightHelperPin = rightHelperPin;
     lineColor = colorOfTheLine;
     readsAnalog = useAnalogSensors;
 
@@ -66,29 +62,25 @@ void SensorArray::calibrateSensors() {
 
 void SensorArray::printAllRaw() {
 #ifdef SERIAL_DEBUG
-    Serial.print(leftSensRaw);
     Serial.print("---");
 
     for (uint16_t i = 0; i < N_OF_SENSORS; i++) {
         Serial.print(sensorRaw[i]);
         Serial.print(",");
     }
-    Serial.print("---");
-    Serial.println(rightSensRaw);
+    Serial.println("---");
 #endif
 }
 
 void SensorArray::printAllProcessed() {
 #ifdef SERIAL_DEBUG
-    Serial.print(leftSensProcessed);
     Serial.print("---");
 
     for (uint16_t i = 0; i < N_OF_SENSORS; i++) {
         Serial.print(sensorProcessed[i]);
         Serial.print(",");
     }
-    Serial.print("---");
-    Serial.println(rightSensProcessed);
+    Serial.println("---");
 #endif
 }
 
@@ -161,12 +153,6 @@ uint16_t SensorArray::readSensorAt(uint8_t sensorIndex) {
 }
 
 void SensorArray::updateSensorsArray() {
-    leftSensRaw = digitalRead(_leftHelperPin);
-    rightSensRaw = digitalRead(_rightHelperPin);
-
-    leftSensProcessed = lineColor == BLACK ? leftSensRaw : !leftSensRaw;
-    rightSensProcessed = lineColor == BLACK ? rightSensRaw : !rightSensRaw;
-
 #ifndef LED_ALWAYS_ON
     // Sets the P-channel MOSFFET gate to LOW, turning it on
     digitalWrite(ledSelec1Pin, LOW);

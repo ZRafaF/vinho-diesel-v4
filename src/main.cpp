@@ -54,8 +54,6 @@ SensorArray mySens(
     MPLX_S2,
     LED_SELEC_1,
     LED_SELEC_2,
-    LEFT_HELPER_SENS,
-    RIGHT_HELPER_SENS,
     SensorArray::LINE_COLOR,
     USE_ANALOG);
 
@@ -98,9 +96,11 @@ void startStop() {
 }
 
 void leftSensInterrupt() {
+    myLineFollower.triggeredInterrupt(LineFollower::LEFT);
 }
 
 void rightSensInterrupt() {
+    myLineFollower.triggeredInterrupt(LineFollower::RIGHT);
 }
 
 void setup() {

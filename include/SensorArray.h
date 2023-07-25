@@ -33,8 +33,6 @@ class SensorArray {
         uint8_t multiplexerS2Pin,
         uint8_t ledSelector1Pin,
         uint8_t ledSelector2Pin,
-        uint8_t leftHelperPin,
-        uint8_t rightHelperPin,
         LineColor colorOfTheLine,
         bool useAnalogSensors);
 
@@ -59,12 +57,6 @@ class SensorArray {
 
     bool readsAnalog = true;
     LineColor lineColor = WHITE;
-
-    bool leftSensRaw = false;
-    bool rightSensRaw = false;
-
-    bool leftSensProcessed = false;
-    bool rightSensProcessed = false;
 
    private:
     // Turns the multiplexer pins to select a pin, receives an index

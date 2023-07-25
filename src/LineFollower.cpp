@@ -102,6 +102,9 @@ float LineFollower::calculateInput(bool sensorsProcessed[N_OF_SENSORS]) {
         lastValidSensorInput = inputResult;
     }
     isOutOfLine = numberOfActiveSensors == 0 ? true : false;
+    if (numberOfActiveSensors >= 4) {
+        lastCrossingTime = millis();
+    }
 
     return lastValidSensorInput;
 }
@@ -179,11 +182,29 @@ float LineFollower::calculateSensorReadingError(float error) {
 }
 
 float LineFollower::calculateMotorOffset() {
+    if (crossedFinishLine) {
+        if (millis() > beginningOfTheEndTime + 1000) {
+            motorsAreActive = false;
+        }
+
+        return 0.3;
+    };
+
     const float minMapRotSpeed = 5.0;
     const float maxMapRotSpeed = 90.0;
     const float constrainedRot = constrain(abs(rotSpeed), minMapRotSpeed, maxMapRotSpeed);
 
     return invertedMap(constrainedRot, minMapRotSpeed, maxMapRotSpeed, 0.5, 1.0);
+}
+
+void LineFollower::triggeredInterrupt(HelperSensorSide sensorSide) {
+    const unsigned int timeNow = millis();
+    if (lastCrossingTime - timeNow >= crossingTimeThreshold) {
+        numberOfRightSignals++;
+        if (numberOfRightSignals >= totalRightSignals) {
+            crossedFinishLine = true;
+        }
+    }
 }
 
 void LineFollower::run() {
@@ -228,6 +249,7 @@ void LineFollower::run() {
         sensorPidResult = 0;
         motors->coast();
     }
+
     printAll();
     delay(10);
 }

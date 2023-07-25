@@ -35,6 +35,11 @@ class LineFollower {
         GYRO
     };
 
+    enum HelperSensorSide {
+        LEFT,
+        RIGHT
+    };
+
     LineFollower(
         SensorArray& sensArrRef,
         Gyro& gyroRef,
@@ -58,6 +63,8 @@ class LineFollower {
     void printAll();
 
     void toggleMotorsAreActive();
+
+    void triggeredInterrupt(HelperSensorSide sensorSide);
 
    private:
     /*
@@ -98,6 +105,14 @@ class LineFollower {
     bool motorsAreActive = false;
     unsigned long lastPressedButtonTime = 0;
 
+    // Millis time of the last intersection
+    unsigned long lastCrossingTime = 0;
+    uint16_t crossingTimeThreshold = 1000;
+    uint8_t numberOfRightSignals = 0;
+    uint8_t totalRightSignals = 1;
+
+    bool shouldStopOnTrigger = false;
+
     float motorOffset = 0.5;
     float motorClamp = 1;
 
@@ -117,6 +132,9 @@ class LineFollower {
     bool gyroWasCalibrated = false;
 
     bool isOutOfLine = true;
+
+    bool crossedFinishLine = false;
+    unsigned long beginningOfTheEndTime = 0;
 
     ControllerType currentController = SENSOR;
 };
