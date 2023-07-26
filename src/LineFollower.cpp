@@ -110,17 +110,15 @@ float LineFollower::calculateInput(bool sensorsProcessed[N_OF_SENSORS]) {
 }
 
 float LineFollower::calculateTargetRotSpeed(float error) {
+    const float absError = abs(error);
+    const float signalError = error / absError;
+
+    currentController = absError > 4
+                            ? GYRO
+                            : SENSOR;
     if (error == 0) return 0;
-    float absError = abs(error);
+
     return (error * 40);
-
-    if (absError > 0 && absError <= 1) return error * 20;
-    if (absError > 1 && absError <= 2) return error * 25;
-    if (absError > 2 && absError <= 3) return error * 30;
-    if (absError > 3 && absError <= 4) return error * 35;
-    if (absError > 4) return error * 40;
-
-    return (error * 20);
 }
 
 void LineFollower::updateMotors() {
@@ -194,12 +192,13 @@ float LineFollower::calculateMotorOffset() {
     const float maxMapRotSpeed = 90.0;
     const float constrainedRot = constrain(abs(rotSpeed), minMapRotSpeed, maxMapRotSpeed);
 
-    return invertedMap(constrainedRot, minMapRotSpeed, maxMapRotSpeed, 0.5, 1.0);
+    return invertedMap(constrainedRot, minMapRotSpeed, maxMapRotSpeed, 0.6, 1.0);
 }
 
 void LineFollower::triggeredInterrupt(HelperSensorSide sensorSide) {
+    return;
     const unsigned int timeNow = millis();
-    if (lastCrossingTime - timeNow >= crossingTimeThreshold) {
+    if (lastCrossingTime && lastCrossingTime - timeNow >= crossingTimeThreshold) {
         numberOfRightSignals++;
         if (numberOfRightSignals >= totalRightSignals) {
             crossedFinishLine = true;
@@ -233,10 +232,6 @@ void LineFollower::run() {
 
     rotSpeedTarget = calculateTargetRotSpeed(sensorTarget - sensorInput);
     rotSpeed = gyro->rotationSpeed;
-
-    currentController = rotSpeed > rotSpeedThreshold
-                            ? GYRO
-                            : SENSOR;
 
     motorOffset = calculateMotorOffset();
 

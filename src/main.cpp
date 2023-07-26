@@ -34,7 +34,7 @@
 #define PWM_B 2
 
 #define USE_ANALOG false
-#define LINE_COLOR BLACK  // BLACK | WHITE
+#define LINE_COLOR WHITE  // BLACK | WHITE
 
 #if LINE_COLOR == WHITE
 #define HELPER_INTERRUPT_MODE RISING

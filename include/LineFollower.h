@@ -118,7 +118,7 @@ class LineFollower {
 
     float rotSpeed;        // Speed of rotation
     float rotSpeedTarget;  // Speed of rotation
-    float rotSpeedThreshold = 45.0f;
+    float rotSpeedThreshold = 90.0f;
 
     uint8_t
         led1Pin,
