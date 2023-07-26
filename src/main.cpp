@@ -37,10 +37,10 @@
 #define LINE_COLOR WHITE  // BLACK | WHITE
 
 #if LINE_COLOR == WHITE
-#define HELPER_INTERRUPT_MODE RISING
+#define HELPER_INTERRUPT_MODE FALLING
 
 #elif LINE_COLOR == BLACK
-#define HELPER_INTERRUPT_MODE FALLING
+#define HELPER_INTERRUPT_MODE RISING
 
 #else
 #error "Invalid LINE_COLOR value"
@@ -68,8 +68,8 @@ Tb6612fng myMotors(
     BIN_2,
     PWM_B);
 
-PIDestal sensorsPid(1.8, 0.02, 3);
-PIDestal gyroPid(0.80, 0.00001, 0.90);
+PIDestal sensorsPid(2, 0.01, 4.5);
+PIDestal gyroPid(0.90, 0.00001, 0.90);
 
 #ifdef USE_BLUETOOTH
 PIDestal* pidArray[] = {&sensorsPid, &gyroPid};
@@ -95,6 +95,16 @@ void startStop() {
     myLineFollower.toggleMotorsAreActive();
 }
 
+void setSlowMode() {
+    myLineFollower.changeMode(LineFollower::SLOW);
+}
+void setMediumMode() {
+    myLineFollower.changeMode(LineFollower::MEDIUM);
+}
+void setFastMode() {
+    myLineFollower.changeMode(LineFollower::FAST);
+}
+
 void leftSensInterrupt() {
     myLineFollower.triggeredInterrupt(LineFollower::LEFT);
 }
@@ -117,9 +127,9 @@ void setup() {
 
 #ifdef USE_BLUETOOTH
 
-    PIDestalRemoteBLE::FunctionPointer functions[] = {startStop};
+    PIDestalRemoteBLE::FunctionPointer functions[] = {startStop, setSlowMode, setMediumMode, setFastMode};
 
-    myRemotePid.setCallbackFunctions(functions, 1);
+    myRemotePid.setCallbackFunctions(functions, 4);
     attachInterrupt(LEFT_HELPER_SENS, leftSensInterrupt, HELPER_INTERRUPT_MODE);
     attachInterrupt(RIGHT_HELPER_SENS, rightSensInterrupt, HELPER_INTERRUPT_MODE);
 

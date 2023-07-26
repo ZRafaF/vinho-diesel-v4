@@ -40,6 +40,11 @@ class LineFollower {
         RIGHT
     };
 
+    enum Modes {
+        SLOW,
+        MEDIUM,
+        FAST,
+    };
     LineFollower(
         SensorArray& sensArrRef,
         Gyro& gyroRef,
@@ -65,6 +70,8 @@ class LineFollower {
     void toggleMotorsAreActive();
 
     void triggeredInterrupt(HelperSensorSide sensorSide);
+
+    void changeMode(Modes newMode);
 
    private:
     /*
@@ -107,14 +114,14 @@ class LineFollower {
 
     // Millis time of the last intersection
     unsigned long lastCrossingTime = 0;
-    uint16_t crossingTimeThreshold = 1000;
+    uint16_t crossingTimeThreshold = 5000;
     uint8_t numberOfRightSignals = 0;
-    uint8_t totalRightSignals = 1;
-
-    bool shouldStopOnTrigger = false;
+    uint8_t totalRightSignals = 2;
 
     float motorOffset = 0.5;
     float motorClamp = 1;
+    float minMotorOffset = 0.7;
+    float maxMotorOffset = 1.0;
 
     float rotSpeed;        // Speed of rotation
     float rotSpeedTarget;  // Speed of rotation
@@ -133,7 +140,6 @@ class LineFollower {
 
     bool isOutOfLine = true;
 
-    bool crossedFinishLine = false;
     unsigned long beginningOfTheEndTime = 0;
 
     ControllerType currentController = SENSOR;

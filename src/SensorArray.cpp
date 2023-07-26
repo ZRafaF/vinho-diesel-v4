@@ -189,21 +189,39 @@ void SensorArray::updateSensorsArray() {
 }
 
 void SensorArray::processReadings() {
-    if (!readsAnalog) {
-        for (int i = 0; i < N_OF_SENSORS; i++) {
+    uint8_t lineStartsAt = 0;
+    uint8_t lineEndsAt = N_OF_SENSORS - 1;
+
+    for (uint8_t i = 0; i < N_OF_SENSORS; i++) {
+        if (!readsAnalog) {
             if (sensorRaw[i]) {
                 sensorProcessed[i] = lineColor == BLACK ? true : false;
             } else {
                 sensorProcessed[i] = lineColor == BLACK ? false : true;
             }
-        }
-        return;
-    }
-    for (int i = 0; i < N_OF_SENSORS; i++) {
-        if (sensorRaw[i] > sensorsThreshold[i]) {
-            sensorProcessed[i] = lineColor == BLACK ? true : false;
         } else {
-            sensorProcessed[i] = lineColor == BLACK ? false : true;
+            if (sensorRaw[i] > sensorsThreshold[i]) {
+                sensorProcessed[i] = lineColor == BLACK ? true : false;
+            } else {
+                sensorProcessed[i] = lineColor == BLACK ? false : true;
+            }
         }
+
+        if (i > 0) {
+            if (sensorProcessed[i] && !sensorProcessed[i - 1]) {
+                lineStartsAt = i;
+            }
+        }
+
+        // Checking for end of line
+        if (i < N_OF_SENSORS) {
+            if (!sensorProcessed[i] && sensorProcessed[i - 1]) {
+                lineEndsAt = i;
+            }
+        }
+    }
+    for (uint8_t i = 0; i < N_OF_SENSORS; i++) {
+        if (i < lineStartsAt || i > lineEndsAt)
+            sensorProcessed[i] = 0;
     }
 }

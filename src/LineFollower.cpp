@@ -102,7 +102,7 @@ float LineFollower::calculateInput(bool sensorsProcessed[N_OF_SENSORS]) {
         lastValidSensorInput = inputResult;
     }
     isOutOfLine = numberOfActiveSensors == 0 ? true : false;
-    if (numberOfActiveSensors >= 4) {
+    if (numberOfActiveSensors >= 4 && motorsAreActive) {
         lastCrossingTime = millis();
     }
 
@@ -112,8 +112,7 @@ float LineFollower::calculateInput(bool sensorsProcessed[N_OF_SENSORS]) {
 float LineFollower::calculateTargetRotSpeed(float error) {
     const float absError = abs(error);
     const float signalError = error / absError;
-
-    currentController = absError > 4
+    currentController = absError > 3
                             ? GYRO
                             : SENSOR;
     if (error == 0) return 0;
@@ -180,30 +179,45 @@ float LineFollower::calculateSensorReadingError(float error) {
 }
 
 float LineFollower::calculateMotorOffset() {
-    if (crossedFinishLine) {
-        if (millis() > beginningOfTheEndTime + 1000) {
-            motorsAreActive = false;
-        }
-
-        return 0.3;
-    };
-
     const float minMapRotSpeed = 5.0;
     const float maxMapRotSpeed = 90.0;
     const float constrainedRot = constrain(abs(rotSpeed), minMapRotSpeed, maxMapRotSpeed);
 
-    return invertedMap(constrainedRot, minMapRotSpeed, maxMapRotSpeed, 0.6, 1.0);
+    return invertedMap(constrainedRot, minMapRotSpeed, maxMapRotSpeed, minMotorOffset, maxMotorOffset);
 }
 
 void LineFollower::triggeredInterrupt(HelperSensorSide sensorSide) {
-    return;
+    if (!motorsAreActive || sensorSide == LEFT) return;
+
     const unsigned int timeNow = millis();
-    if (lastCrossingTime && lastCrossingTime - timeNow >= crossingTimeThreshold) {
+    if (timeNow - lastCrossingTime >= crossingTimeThreshold) {
         numberOfRightSignals++;
         if (numberOfRightSignals >= totalRightSignals) {
-            crossedFinishLine = true;
+            motorsAreActive = false;
         }
     }
+}
+
+void LineFollower::changeMode(Modes newMode) {
+    if (newMode == SLOW) {
+        minMotorOffset = 0.4;
+        maxMotorOffset = 0.7;
+    }
+    if (newMode == MEDIUM) {
+        minMotorOffset = 0.6;
+        maxMotorOffset = 0.9;
+    }
+    if (newMode == FAST) {
+        minMotorOffset = 0.7;
+        maxMotorOffset = 1.0;
+    }
+
+#ifdef USE_BLUETOOTH
+    if (newMode == SLOW) remotePid->setExtraInfo("SLOW");
+    if (newMode == MEDIUM) remotePid->setExtraInfo("MEDIUM");
+    if (newMode == FAST) remotePid->setExtraInfo("FAST");
+
+#endif
 }
 
 void LineFollower::run() {
@@ -213,7 +227,6 @@ void LineFollower::run() {
         toggleMotorsAreActive();
         remotePid->setExtraInfo("b");
     }
-    remotePid->setExtraInfo(currentController == SENSOR ? "SENSOR" : "GYRO");
 #endif
     digitalWrite(led2Pin, motorsAreActive ? HIGH : LOW);
     updateButtons();
@@ -245,6 +258,6 @@ void LineFollower::run() {
         motors->coast();
     }
 
-    printAll();
+    // printAll();
     delay(10);
 }
