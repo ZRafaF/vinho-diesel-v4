@@ -15,8 +15,6 @@
 #ifndef LINE_FOLLOWER_H
 #define LINE_FOLLOWER_H
 
-#define USE_BLUETOOTH
-
 #include <Arduino.h>
 
 #include "GlobalConsts.h"
@@ -25,6 +23,9 @@
 #include "PIDestalRemoteBLE.h"
 #include "SensorArray.h"
 #include "TB6612FNG.h"
+
+#define DEFAULT_MIN_MOTOR_OFFSET 0.7
+#define DEFAULT_MAX_MOTOR_OFFSET 1.0
 
 float invertedMap(float input, float inMin, float inMax, float outMin, float outMax);
 
@@ -66,6 +67,7 @@ class LineFollower {
 
     // Prints all parameters
     void printAll();
+    void printAll2();
 
     void toggleMotorsAreActive();
 
@@ -87,6 +89,8 @@ class LineFollower {
     float calculateSensorReadingError(float error);
 
     float calculateMotorOffset();
+
+    void endRun();
 
     SensorArray* sensorArray;
     PIDestal* sensorPid;
@@ -120,8 +124,8 @@ class LineFollower {
 
     float motorOffset = 0.5;
     float motorClamp = 1;
-    float minMotorOffset = 0.7;
-    float maxMotorOffset = 1.0;
+    float minMotorOffset = DEFAULT_MIN_MOTOR_OFFSET;
+    float maxMotorOffset = DEFAULT_MAX_MOTOR_OFFSET;
 
     float rotSpeed;        // Speed of rotation
     float rotSpeedTarget;  // Speed of rotation
@@ -140,11 +144,11 @@ class LineFollower {
 
     bool isOutOfLine = true;
 
-    unsigned long beginningOfTheEndTime = 0;
-
     ControllerType currentController = SENSOR;
 
     bool lastRightHelper = false;
+    unsigned long crossedFinishLine = 0;
+    bool shouldStop = false;
 };
 
 #endif  // LINE_FOLLOWER_H
