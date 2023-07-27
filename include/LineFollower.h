@@ -15,8 +15,6 @@
 #ifndef LINE_FOLLOWER_H
 #define LINE_FOLLOWER_H
 
-#define USE_BLUETOOTH
-
 #include <Arduino.h>
 
 #include "GlobalConsts.h"
@@ -25,6 +23,9 @@
 #include "PIDestalRemoteBLE.h"
 #include "SensorArray.h"
 #include "TB6612FNG.h"
+
+#define DEFAULT_MIN_MOTOR_OFFSET 0.7
+#define DEFAULT_MAX_MOTOR_OFFSET 1.0
 
 float invertedMap(float input, float inMin, float inMax, float outMin, float outMax);
 
@@ -35,6 +36,16 @@ class LineFollower {
         GYRO
     };
 
+    enum HelperSensorSide {
+        LEFT,
+        RIGHT
+    };
+
+    enum Modes {
+        SLOW,
+        MEDIUM,
+        FAST,
+    };
     LineFollower(
         SensorArray& sensArrRef,
         Gyro& gyroRef,
@@ -56,8 +67,13 @@ class LineFollower {
 
     // Prints all parameters
     void printAll();
+    void printAll2();
 
     void toggleMotorsAreActive();
+
+    void triggeredInterrupt(HelperSensorSide sensorSide);
+
+    void changeMode(Modes newMode);
 
    private:
     /*
@@ -73,6 +89,8 @@ class LineFollower {
     float calculateSensorReadingError(float error);
 
     float calculateMotorOffset();
+
+    void endRun();
 
     SensorArray* sensorArray;
     PIDestal* sensorPid;
@@ -98,12 +116,20 @@ class LineFollower {
     bool motorsAreActive = false;
     unsigned long lastPressedButtonTime = 0;
 
+    // Millis time of the last intersection
+    unsigned long lastCrossingTime = 0;
+    uint16_t crossingTimeThreshold = 5000;
+    uint8_t numberOfRightSignals = 0;
+    uint8_t totalRightSignals = 2;
+
     float motorOffset = 0.5;
     float motorClamp = 1;
+    float minMotorOffset = DEFAULT_MIN_MOTOR_OFFSET;
+    float maxMotorOffset = DEFAULT_MAX_MOTOR_OFFSET;
 
     float rotSpeed;        // Speed of rotation
     float rotSpeedTarget;  // Speed of rotation
-    float rotSpeedThreshold = 45.0f;
+    float rotSpeedThreshold = 90.0f;
 
     uint8_t
         led1Pin,
@@ -119,6 +145,10 @@ class LineFollower {
     bool isOutOfLine = true;
 
     ControllerType currentController = SENSOR;
+
+    bool lastRightHelper = false;
+    unsigned long crossedFinishLine = 0;
+    bool shouldStop = false;
 };
 
 #endif  // LINE_FOLLOWER_H

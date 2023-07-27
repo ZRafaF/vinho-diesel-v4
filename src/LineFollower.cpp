@@ -55,6 +55,11 @@ LineFollower::LineFollower(
     button2Pin = inputButton2;
 }
 
+void LineFollower::endRun() {
+    shouldStop = true;
+    crossedFinishLine = millis();
+}
+
 void LineFollower::initialize() {
 #ifdef USE_BLUETOOTH
     remotePid->initialize("VINHO_DIESEL", "Diesel");
@@ -84,7 +89,10 @@ void LineFollower::toggleMotorsAreActive() {
     unsigned long currentTime = millis();
     if (currentTime > lastPressedButtonTime + 200) {
         lastPressedButtonTime = currentTime;
+        shouldStop = false;
+        delay(500);
         motorsAreActive = !motorsAreActive;
+        shouldStop = false;
     }
 }
 
@@ -102,26 +110,26 @@ float LineFollower::calculateInput(bool sensorsProcessed[N_OF_SENSORS]) {
         lastValidSensorInput = inputResult;
     }
     isOutOfLine = numberOfActiveSensors == 0 ? true : false;
+    if (numberOfActiveSensors >= 4 && motorsAreActive) {
+        lastCrossingTime = millis();
+    }
 
     return lastValidSensorInput;
 }
 
 float LineFollower::calculateTargetRotSpeed(float error) {
     if (error == 0) return 0;
-    float absError = abs(error);
-    return (error * 40);
+    const float absError = abs(error);
+    const float signalError = error / absError;
+    currentController = absError > 3
+                            ? GYRO
+                            : SENSOR;
 
-    if (absError > 0 && absError <= 1) return error * 20;
-    if (absError > 1 && absError <= 2) return error * 25;
-    if (absError > 2 && absError <= 3) return error * 30;
-    if (absError > 3 && absError <= 4) return error * 35;
-    if (absError > 4) return error * 40;
-
-    return (error * 20);
+    return (error * 50);
 }
 
 void LineFollower::updateMotors() {
-    if (currentController == GYRO || isOutOfLine) {
+    if (isOutOfLine) {
         pidResult = gyroPidResult * errorGain;
 
     } else {
@@ -170,10 +178,24 @@ void LineFollower::printAll() {
 #endif
 }
 
+void LineFollower::printAll2() {
+#ifdef SERIAL_DEBUG
+    Serial.print("nOfRight: ");
+    Serial.print(numberOfRightSignals);
+    Serial.print("\t");
+    Serial.println();
+
+#endif
+}
+
 float LineFollower::calculateSensorReadingError(float error) {
     if (error == 0) return 0;
     float absError = abs(error);
     float errorSignal = error / absError;
+    if (absError > 0 && absError <= 1) return error * 1.2;
+    if (absError > 1 && absError <= 2) return error * 1.1;
+    if (absError > 2 && absError <= 3) return error * 1.0;
+    if (absError > 3) return error * 0.9;
 
     return error;
 }
@@ -183,7 +205,41 @@ float LineFollower::calculateMotorOffset() {
     const float maxMapRotSpeed = 90.0;
     const float constrainedRot = constrain(abs(rotSpeed), minMapRotSpeed, maxMapRotSpeed);
 
-    return invertedMap(constrainedRot, minMapRotSpeed, maxMapRotSpeed, 0.5, 1.0);
+    return invertedMap(constrainedRot, minMapRotSpeed, maxMapRotSpeed, minMotorOffset, maxMotorOffset);
+}
+
+void LineFollower::triggeredInterrupt(HelperSensorSide sensorSide) {
+    if (!motorsAreActive || sensorSide == LEFT) return;
+
+    const unsigned int timeNow = millis();
+    if (timeNow - lastCrossingTime >= crossingTimeThreshold) {
+        numberOfRightSignals++;
+        if (numberOfRightSignals >= totalRightSignals) {
+            endRun();
+        }
+    }
+}
+
+void LineFollower::changeMode(Modes newMode) {
+    if (newMode == SLOW) {
+        minMotorOffset = 0.4;
+        maxMotorOffset = 0.7;
+    }
+    if (newMode == MEDIUM) {
+        minMotorOffset = 0.7;
+        maxMotorOffset = 1.0;
+    }
+    if (newMode == FAST) {
+        minMotorOffset = 0.8;
+        maxMotorOffset = 1.0;
+    }
+
+#ifdef USE_BLUETOOTH
+    if (newMode == SLOW) remotePid->setExtraInfo("SLOW");
+    if (newMode == MEDIUM) remotePid->setExtraInfo("MEDIUM");
+    if (newMode == FAST) remotePid->setExtraInfo("FAST");
+
+#endif
 }
 
 void LineFollower::run() {
@@ -193,7 +249,6 @@ void LineFollower::run() {
         toggleMotorsAreActive();
         remotePid->setExtraInfo("b");
     }
-    remotePid->setExtraInfo(currentController == SENSOR ? "SENSOR" : "GYRO");
 #endif
     digitalWrite(led2Pin, motorsAreActive ? HIGH : LOW);
     updateButtons();
@@ -206,6 +261,7 @@ void LineFollower::run() {
             gyroWasCalibrated = true;
         }
     }
+
     sensorArray->updateSensorsArray();
     sensorInput = calculateInput(sensorArray->sensorProcessed);
     gyro->update();
@@ -213,21 +269,35 @@ void LineFollower::run() {
     rotSpeedTarget = calculateTargetRotSpeed(sensorTarget - sensorInput);
     rotSpeed = gyro->rotationSpeed;
 
-    currentController = rotSpeed > rotSpeedThreshold
-                            ? GYRO
-                            : SENSOR;
-
     motorOffset = calculateMotorOffset();
+    if (shouldStop) {
+        if (millis() - crossedFinishLine >= 300) {
+            motorsAreActive = false;
+        }
+    }
 
     if (motorsAreActive) {
+        const bool processedRightHelper = sensorArray->rightSensProcessed;
+        if (!lastRightHelper && processedRightHelper) {
+            lastRightHelper = processedRightHelper;
+            triggeredInterrupt(RIGHT);
+        }
+        lastRightHelper = processedRightHelper;
         sensorPidResult = sensorPid->calculate(calculateSensorReadingError(sensorTarget - sensorInput));
         gyroPidResult = gyroPid->calculate(rotSpeedTarget - rotSpeed);
         updateMotors();
     } else {
         gyroPidResult = 0;
         sensorPidResult = 0;
-        motors->coast();
+        numberOfRightSignals = 0;
+
+        if (shouldStop) {
+            motors->brake();
+        } else {
+            motors->coast();
+        }
     }
-    printAll();
+    // printAll();
+    // printAll2();
     delay(10);
 }

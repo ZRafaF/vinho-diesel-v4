@@ -33,6 +33,8 @@ class SensorArray {
         uint8_t multiplexerS2Pin,
         uint8_t ledSelector1Pin,
         uint8_t ledSelector2Pin,
+        uint8_t leftHelperPin,
+        uint8_t rightHelperPin,
         LineColor colorOfTheLine,
         bool useAnalogSensors);
 
@@ -55,6 +57,12 @@ class SensorArray {
     uint16_t sensorRaw[N_OF_SENSORS];
     bool sensorProcessed[N_OF_SENSORS];
 
+    uint16_t leftSensRaw;
+    bool rightSensRaw = false;
+
+    bool leftSensProcessed = false;
+    bool rightSensProcessed = false;
+
     bool readsAnalog = true;
     LineColor lineColor = WHITE;
 
@@ -64,12 +72,14 @@ class SensorArray {
 
     void processReadings();
 
-    uint8_t mplxIOPin;
-    uint8_t mplxS0Pin;
-    uint8_t mplxS1Pin;
-    uint8_t mplxS2Pin;
-    uint8_t ledSelec1Pin;
-    uint8_t ledSelec2Pin;
+    uint8_t _mplxIOPin;
+    uint8_t _mplxS0Pin;
+    uint8_t _mplxS1Pin;
+    uint8_t _mplxS2Pin;
+    uint8_t _ledSelec1Pin;
+    uint8_t _ledSelec2Pin;
+    uint8_t _leftHelperPin;
+    uint8_t _rightHelperPin;
 
     // Minimum analog read for each sensor
     uint16_t minRead[N_OF_SENSORS];
