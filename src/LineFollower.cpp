@@ -110,18 +110,18 @@ float LineFollower::calculateInput(bool sensorsProcessed[N_OF_SENSORS]) {
 }
 
 float LineFollower::calculateTargetRotSpeed(float error) {
+    if (error == 0) return 0;
     const float absError = abs(error);
     const float signalError = error / absError;
     currentController = absError > 3
                             ? GYRO
                             : SENSOR;
-    if (error == 0) return 0;
 
-    return (error * 40);
+    return (error * 50);
 }
 
 void LineFollower::updateMotors() {
-    if (currentController == GYRO || isOutOfLine) {
+    if (isOutOfLine) {
         pidResult = gyroPidResult * errorGain;
 
     } else {
