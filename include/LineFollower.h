@@ -143,6 +143,8 @@ class LineFollower {
     unsigned long beginningOfTheEndTime = 0;
 
     ControllerType currentController = SENSOR;
+
+    bool lastRightHelper = false;
 };
 
 #endif  // LINE_FOLLOWER_H

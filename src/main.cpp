@@ -54,6 +54,8 @@ SensorArray mySens(
     MPLX_S2,
     LED_SELEC_1,
     LED_SELEC_2,
+    LEFT_HELPER_SENS,
+    RIGHT_HELPER_SENS,
     SensorArray::LINE_COLOR,
     USE_ANALOG);
 
@@ -68,7 +70,7 @@ Tb6612fng myMotors(
     BIN_2,
     PWM_B);
 
-PIDestal sensorsPid(1.8, 0.01, 3);
+PIDestal sensorsPid(2.0, 0.01, 4.0);
 PIDestal gyroPid(0.90, 0.00001, 0.90);
 
 #ifdef USE_BLUETOOTH
@@ -131,7 +133,7 @@ void setup() {
 
     myRemotePid.setCallbackFunctions(functions, 4);
     // attachInterrupt(LEFT_HELPER_SENS, leftSensInterrupt, HELPER_INTERRUPT_MODE);
-    attachInterrupt(RIGHT_HELPER_SENS, rightSensInterrupt, HELPER_INTERRUPT_MODE);
+    // attachInterrupt(RIGHT_HELPER_SENS, rightSensInterrupt, HELPER_INTERRUPT_MODE);
 
 #endif
 }

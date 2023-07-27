@@ -174,6 +174,10 @@ float LineFollower::calculateSensorReadingError(float error) {
     if (error == 0) return 0;
     float absError = abs(error);
     float errorSignal = error / absError;
+    if (absError > 0 && absError <= 1) return error * 0.9;
+    if (absError > 1 && absError <= 2) return error * 1.1;
+    if (absError > 2 && absError <= 3) return error * 1.2;
+    if (absError > 3) return error * 1.2;
 
     return error;
 }
@@ -239,6 +243,7 @@ void LineFollower::run() {
             gyroWasCalibrated = true;
         }
     }
+
     sensorArray->updateSensorsArray();
     sensorInput = calculateInput(sensorArray->sensorProcessed);
     gyro->update();
@@ -249,6 +254,10 @@ void LineFollower::run() {
     motorOffset = calculateMotorOffset();
 
     if (motorsAreActive) {
+        if (!lastRightHelper && sensorArray->rightSensProcessed) {
+            lastRightHelper = sensorArray->rightSensProcessed;
+            triggeredInterrupt(RIGHT);
+        }
         sensorPidResult = sensorPid->calculate(calculateSensorReadingError(sensorTarget - sensorInput));
         gyroPidResult = gyroPid->calculate(rotSpeedTarget - rotSpeed);
         updateMotors();
@@ -256,6 +265,7 @@ void LineFollower::run() {
         gyroPidResult = 0;
         sensorPidResult = 0;
         motors->coast();
+        numberOfRightSignals = 0;
     }
 
     // printAll();
