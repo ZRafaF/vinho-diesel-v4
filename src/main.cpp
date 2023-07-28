@@ -63,8 +63,8 @@ Gyro myGyro;
 
 Tb6612fng myMotors(
     STBY,
-    AIN_1,
     AIN_2,
+    AIN_1,
     PWM_A,
     BIN_1,
     BIN_2,

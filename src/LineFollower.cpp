@@ -75,10 +75,13 @@ void LineFollower::initialize() {
 
     motors->begin();
 
-    currentMode = MEDIUM;
+    changeMode(MEDIUM);
 }
 
 void LineFollower::updateButtons() {
+    if (!gyroWasCalibrated) {
+        return;
+    }
     button1 = digitalRead(button1Pin);
     button2 = digitalRead(button2Pin);
 
@@ -87,6 +90,7 @@ void LineFollower::updateButtons() {
     }
     if (button2 && isButtonPressValid()) {
         switchMode();
+        Serial.println("AAAAAAAAA");
     }
 }
 
@@ -209,6 +213,9 @@ void LineFollower::printAll2() {
     Serial.print("nOfRight: ");
     Serial.print(numberOfRightSignals);
     Serial.print("\t");
+    Serial.print("Mode: ");
+    Serial.print(currentMode);
+    Serial.print("\t");
     Serial.println();
 
 #endif
@@ -265,6 +272,10 @@ void LineFollower::updateMode() {
         digitalWrite(led1Pin, HIGH);
         digitalWrite(led2Pin, HIGH);
     }
+}
+
+void LineFollower::changeMode(Modes newMode) {
+    currentMode = newMode;
 
 #ifdef USE_BLUETOOTH
     if (newMode == SLOW) remotePid->setExtraInfo("SLOW");
