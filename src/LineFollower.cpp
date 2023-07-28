@@ -74,26 +74,52 @@ void LineFollower::initialize() {
     pinMode(button2Pin, INPUT);
 
     motors->begin();
+
+    currentMode = MEDIUM;
 }
 
 void LineFollower::updateButtons() {
     button1 = digitalRead(button1Pin);
     button2 = digitalRead(button2Pin);
 
-    if (button1) {
+    if (button1 && isButtonPressValid()) {
         toggleMotorsAreActive();
+    }
+    if (button2 && isButtonPressValid()) {
+        switchMode();
+    }
+}
+
+bool LineFollower::isButtonPressValid() {
+    unsigned long currentTime = millis();
+    if (currentTime > lastPressedButtonTime + 200) {
+        lastPressedButtonTime = currentTime;
+        return true;
+    }
+    return false;
+}
+
+void LineFollower::switchMode() {
+    switch (currentMode) {
+        case SLOW:
+            currentMode = MEDIUM;
+            break;
+        case MEDIUM:
+            currentMode = FAST;
+            break;
+        case FAST:
+            currentMode = SLOW;
+            break;
+        default:
+            break;
     }
 }
 
 void LineFollower::toggleMotorsAreActive() {
-    unsigned long currentTime = millis();
-    if (currentTime > lastPressedButtonTime + 200) {
-        lastPressedButtonTime = currentTime;
-        shouldStop = false;
-        delay(500);
-        motorsAreActive = !motorsAreActive;
-        shouldStop = false;
-    }
+    shouldStop = false;
+    delay(500);
+    motorsAreActive = !motorsAreActive;
+    shouldStop = false;
 }
 
 float LineFollower::calculateInput(bool sensorsProcessed[N_OF_SENSORS]) {
@@ -220,18 +246,24 @@ void LineFollower::triggeredInterrupt(HelperSensorSide sensorSide) {
     }
 }
 
-void LineFollower::changeMode(Modes newMode) {
-    if (newMode == SLOW) {
+void LineFollower::updateMode() {
+    if (currentMode == SLOW) {
         minMotorOffset = 0.4;
         maxMotorOffset = 0.7;
+        digitalWrite(led1Pin, LOW);
+        digitalWrite(led2Pin, LOW);
     }
-    if (newMode == MEDIUM) {
+    if (currentMode == MEDIUM) {
         minMotorOffset = 0.7;
         maxMotorOffset = 1.0;
+        digitalWrite(led1Pin, LOW);
+        digitalWrite(led2Pin, HIGH);
     }
-    if (newMode == FAST) {
+    if (currentMode == FAST) {
         minMotorOffset = 0.8;
         maxMotorOffset = 1.0;
+        digitalWrite(led1Pin, HIGH);
+        digitalWrite(led2Pin, HIGH);
     }
 
 #ifdef USE_BLUETOOTH
@@ -250,7 +282,7 @@ void LineFollower::run() {
         remotePid->setExtraInfo("b");
     }
 #endif
-    digitalWrite(led2Pin, motorsAreActive ? HIGH : LOW);
+    // digitalWrite(led2Pin, motorsAreActive ? HIGH : LOW);
     updateButtons();
     if (!gyroWasCalibrated) {
         digitalWrite(led1Pin, HIGH);
@@ -265,6 +297,8 @@ void LineFollower::run() {
     sensorArray->updateSensorsArray();
     sensorInput = calculateInput(sensorArray->sensorProcessed);
     gyro->update();
+
+    updateMode();
 
     rotSpeedTarget = calculateTargetRotSpeed(sensorTarget - sensorInput);
     rotSpeed = gyro->rotationSpeed;

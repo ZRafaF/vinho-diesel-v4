@@ -92,6 +92,12 @@ class LineFollower {
 
     void endRun();
 
+    void switchMode();
+
+    bool isButtonPressValid();
+
+    void updateMode();
+
     SensorArray* sensorArray;
     PIDestal* sensorPid;
     PIDestal* gyroPid;
@@ -149,6 +155,8 @@ class LineFollower {
     bool lastRightHelper = false;
     unsigned long crossedFinishLine = 0;
     bool shouldStop = false;
+
+    Modes currentMode = MEDIUM;
 };
 
 #endif  // LINE_FOLLOWER_H
