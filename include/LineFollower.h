@@ -71,7 +71,8 @@ class LineFollower {
 
     void toggleMotorsAreActive();
 
-    void triggeredInterrupt(HelperSensorSide sensorSide);
+    void triggeredInterruptRising(HelperSensorSide sensorSide);
+    void triggeredInterruptFalling(HelperSensorSide sensorSide);
 
     void changeMode(Modes newMode);
 
@@ -126,7 +127,7 @@ class LineFollower {
 
     // Millis time of the last intersection
     unsigned long lastCrossingTime = 0;
-    uint16_t crossingTimeThreshold = 5000;
+    uint16_t crossingTimeThreshold = 500;
     uint8_t numberOfRightSignals = 0;
     uint8_t totalRightSignals = 2;
 
@@ -134,6 +135,7 @@ class LineFollower {
     float motorClamp = 1;
     float minMotorOffset = DEFAULT_MIN_MOTOR_OFFSET;
     float maxMotorOffset = DEFAULT_MAX_MOTOR_OFFSET;
+    float speedMultiplier = 1.0;
 
     float rotSpeed;        // Speed of rotation
     float rotSpeedTarget;  // Speed of rotation
@@ -159,7 +161,13 @@ class LineFollower {
     unsigned long crossedFinishLine = 0;
     bool shouldStop = false;
 
+    unsigned long lastInterrupt = 0;
+
+    bool doOnceStart = true;
+
     Modes currentMode = MEDIUM;
+
+    unsigned long interruptRisingTime = 0;
 };
 
 #endif  // LINE_FOLLOWER_H
