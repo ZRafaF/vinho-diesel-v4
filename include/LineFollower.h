@@ -157,7 +157,7 @@ class LineFollower {
     ControllerType currentController = SENSOR;
 
     bool lastRightHelper = false;
-    unsigned long crossedStartLine = 0;
+    // unsigned long crossedStartLine = 0;
     unsigned long crossedFinishLine = 0;
     bool shouldStop = false;
 

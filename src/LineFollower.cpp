@@ -236,7 +236,7 @@ float LineFollower::calculateSensorReadingError(float error) {
     if (absError > 0 && absError <= 1) return error * 1.1;
     if (absError > 1 && absError <= 2) return error * 1.0;
     if (absError > 2 && absError <= 3) return error * 1.0;
-    if (absError > 3) return error * 1.0;
+    if (absError > 3) return error * 1.1;
 
     return error;
 }
@@ -253,11 +253,9 @@ float LineFollower::calculateMotorOffset() {
 void LineFollower::triggeredInterrupt(HelperSensorSide sensorSide) {
     if (!motorsAreActive || sensorSide == LEFT) return;
 
-    if (millis() - lastCrossingTime >= crossingTimeThreshold) {
+    const unsigned int timeNow = millis();
+    if (timeNow - lastCrossingTime >= crossingTimeThreshold) {
         numberOfRightSignals++;
-        if (numberOfRightSignals == 1) {
-            crossedStartLine = millis();
-        }
         if (numberOfRightSignals >= totalRightSignals) {
             endRun();
         }
@@ -336,10 +334,11 @@ void LineFollower::run() {
             motorsAreActive = false;
         }
     }
-
+    /*
     if (isOutOfLine && millis() - outOfLineStartingTime >= 800) {
         motorsAreActive = false;
     }
+    */
 
     if (motorsAreActive) {
         const bool processedRightHelper = sensorArray->rightSensProcessed;

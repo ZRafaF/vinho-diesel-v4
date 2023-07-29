@@ -72,7 +72,7 @@ Tb6612fng myMotors(
     BIN_2,
     PWM_B);
 
-PIDestal sensorsPid(2, 0.001, 16);
+PIDestal sensorsPid(1.9, 0.001, 13.5);
 PIDestal gyroPid(0.90, 0.00001, 0.90);
 
 #ifdef USE_BLUETOOTH
@@ -134,10 +134,9 @@ void setup() {
     PIDestalRemoteBLE::FunctionPointer functions[] = {startStop, setSlowMode, setMediumMode, setFastMode};
 
     myRemotePid.setCallbackFunctions(functions, 4);
+#endif
     // attachInterrupt(LEFT_HELPER_SENS, leftSensInterrupt, HELPER_INTERRUPT_MODE);
     // attachInterrupt(RIGHT_HELPER_SENS, rightSensInterrupt, HELPER_INTERRUPT_MODE);
-
-#endif
 }
 
 void loop() {
