@@ -250,10 +250,29 @@ float LineFollower::calculateMotorOffset() {
     return invertedMap(constrainedRot, minMapRotSpeed, maxMapRotSpeed, minMotorOffset, maxMotorOffset);
 }
 
-void LineFollower::triggeredInterrupt(HelperSensorSide sensorSide) {
+void LineFollower::triggeredInterruptRising(HelperSensorSide sensorSide) {
     if (!motorsAreActive || sensorSide == LEFT) return;
 
     const unsigned int timeNow = millis();
+    if (timeNow - lastCrossingTime >= crossingTimeThreshold) {
+        numberOfRightSignals++;
+        if (numberOfRightSignals >= totalRightSignals) {
+            endRun();
+        }
+    }
+}
+
+void LineFollower::triggeredInterruptFalling(HelperSensorSide sensorSide) {
+    if (!motorsAreActive || sensorSide == LEFT) return;
+
+    const unsigned int timeNow = micros();
+
+    if (timeNow - lastInterrupt < 100) {
+        lastInterrupt = timeNow;
+        return;
+    }
+    lastInterrupt = timeNow;
+    Serial.println("int");
     if (timeNow - lastCrossingTime >= crossingTimeThreshold) {
         numberOfRightSignals++;
         if (numberOfRightSignals >= totalRightSignals) {
@@ -341,10 +360,13 @@ void LineFollower::run() {
     */
 
     if (motorsAreActive) {
+        if (doOnceStart) {
+            doOnceStart = false;
+        }
         const bool processedRightHelper = sensorArray->rightSensProcessed;
         if (!lastRightHelper && processedRightHelper) {
             lastRightHelper = processedRightHelper;
-            triggeredInterrupt(RIGHT);
+            // triggeredInterrupt(RIGHT);
         }
         lastRightHelper = processedRightHelper;
         sensorPidResult = sensorPid->calculate(calculateSensorReadingError(sensorTarget - sensorInput));

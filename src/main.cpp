@@ -38,9 +38,11 @@
 
 #if LINE_COLOR == WHITE
 #define HELPER_INTERRUPT_MODE FALLING
+#define HELPER_INTERRUPT_MODE_OFFLINE RISING
 
 #elif LINE_COLOR == BLACK
 #define HELPER_INTERRUPT_MODE RISING
+#define HELPER_INTERRUPT_MODE_OFFLINE FALLING
 
 #else
 #error "Invalid LINE_COLOR value"
@@ -109,12 +111,19 @@ void setFastMode() {
     myLineFollower.changeMode(LineFollower::FAST);
 }
 
-void leftSensInterrupt() {
-    myLineFollower.triggeredInterrupt(LineFollower::LEFT);
+void leftSensInterruptOnLine() {
+    myLineFollower.triggeredInterruptFalling(LineFollower::LEFT);
+}
+void leftSensInterruptOffLine() {
+    myLineFollower.triggeredInterruptRising(LineFollower::LEFT);
 }
 
-void rightSensInterrupt() {
-    myLineFollower.triggeredInterrupt(LineFollower::RIGHT);
+void rightSensInterruptOnline() {
+    myLineFollower.triggeredInterruptFalling(LineFollower::RIGHT);
+}
+
+void rightSensInterruptOffline() {
+    myLineFollower.triggeredInterruptRising(LineFollower::RIGHT);
 }
 
 void setup() {
@@ -135,8 +144,13 @@ void setup() {
 
     myRemotePid.setCallbackFunctions(functions, 4);
 #endif
-    // attachInterrupt(LEFT_HELPER_SENS, leftSensInterrupt, HELPER_INTERRUPT_MODE);
-    // attachInterrupt(RIGHT_HELPER_SENS, rightSensInterrupt, HELPER_INTERRUPT_MODE);
+    attachInterrupt(LEFT_HELPER_SENS, leftSensInterruptOnLine, HELPER_INTERRUPT_MODE);
+    attachInterrupt(RIGHT_HELPER_SENS, rightSensInterruptOnline, HELPER_INTERRUPT_MODE);
+
+    /*
+    attachInterrupt(LEFT_HELPER_SENS, leftSensInterruptOffLine, HELPER_INTERRUPT_MODE_OFFLINE);
+    attachInterrupt(RIGHT_HELPER_SENS, rightSensInterruptOffline, HELPER_INTERRUPT_MODE_OFFLINE);
+    */
 }
 
 void loop() {
