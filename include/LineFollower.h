@@ -162,7 +162,6 @@ class LineFollower {
     bool shouldStop = false;
 
     Modes currentMode = MEDIUM;
-    unsigned long currentTime = 0;
 };
 
 #endif  // LINE_FOLLOWER_H

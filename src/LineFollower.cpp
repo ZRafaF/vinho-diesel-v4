@@ -57,7 +57,7 @@ LineFollower::LineFollower(
 
 void LineFollower::endRun() {
     shouldStop = true;
-    crossedFinishLine = currentTime;
+    crossedFinishLine = millis();
 }
 
 void LineFollower::initialize() {
@@ -95,8 +95,8 @@ void LineFollower::updateButtons() {
 }
 
 bool LineFollower::isButtonPressValid() {
-    if (currentTime > lastPressedButtonTime + 200) {
-        lastPressedButtonTime = currentTime;
+    if (millis() > lastPressedButtonTime + 200) {
+        lastPressedButtonTime = millis();
         return true;
     }
     return false;
@@ -142,13 +142,13 @@ float LineFollower::calculateInput(bool sensorsProcessed[N_OF_SENSORS]) {
     if (numberOfActiveSensors == 0) {
         if (isOutOfLine == false) {
             isOutOfLine = true;
-            outOfLineStartingTime = currentTime;
+            outOfLineStartingTime = millis();
         }
     } else {
         isOutOfLine = false;
     }
     if (numberOfActiveSensors >= 4 && motorsAreActive) {
-        lastCrossingTime = currentTime;
+        lastCrossingTime = millis();
     }
 
     return lastValidSensorInput;
@@ -253,10 +253,10 @@ float LineFollower::calculateMotorOffset() {
 void LineFollower::triggeredInterrupt(HelperSensorSide sensorSide) {
     if (!motorsAreActive || sensorSide == LEFT) return;
 
-    if (currentTime - lastCrossingTime >= crossingTimeThreshold) {
+    if (millis() - lastCrossingTime >= crossingTimeThreshold) {
         numberOfRightSignals++;
         if (numberOfRightSignals == 1) {
-            crossedStartLine = currentTime;
+            crossedStartLine = millis();
         }
         if (numberOfRightSignals >= totalRightSignals) {
             endRun();
@@ -278,7 +278,7 @@ void LineFollower::updateMode() {
         digitalWrite(led2Pin, HIGH);
     }
     if (currentMode == FAST) {
-        minMotorOffset = 0.4;
+        minMotorOffset = 0.7;
         maxMotorOffset = 1.0;
         digitalWrite(led1Pin, HIGH);
         digitalWrite(led2Pin, HIGH);
@@ -310,7 +310,6 @@ void LineFollower::run() {
     }
 #endif
     // digitalWrite(led2Pin, motorsAreActive ? HIGH : LOW);
-    currentTime = millis();
     updateButtons();
     if (!gyroWasCalibrated) {
         digitalWrite(led1Pin, HIGH);
@@ -333,12 +332,12 @@ void LineFollower::run() {
 
     motorOffset = calculateMotorOffset();
     if (shouldStop) {
-        if (currentTime - crossedFinishLine >= 200) {
+        if (millis() - crossedFinishLine >= 200) {
             motorsAreActive = false;
         }
     }
 
-    if (isOutOfLine && currentTime - outOfLineStartingTime >= 800) {
+    if (isOutOfLine && millis() - outOfLineStartingTime >= 800) {
         motorsAreActive = false;
     }
 
@@ -364,7 +363,7 @@ void LineFollower::run() {
         }
     }
     /*
-    const unsigned long runTime = currentTime - crossedStartLine;
+    const unsigned long runTime = millis() - crossedStartLine;
     if (runTime > 10000 && runTime < 13000) {
         speedMultiplier = 0.7;
     } else {
