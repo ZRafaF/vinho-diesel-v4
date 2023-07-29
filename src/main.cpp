@@ -47,6 +47,8 @@
 
 #endif
 
+// 12 até a squiggle
+
 SensorArray mySens(
     MIO,
     MPLX_S0,
@@ -70,7 +72,7 @@ Tb6612fng myMotors(
     BIN_2,
     PWM_B);
 
-PIDestal sensorsPid(2.0, 0.01, 3.0);
+PIDestal sensorsPid(1.5, 0.001, 12);
 PIDestal gyroPid(0.90, 0.00001, 0.90);
 
 #ifdef USE_BLUETOOTH

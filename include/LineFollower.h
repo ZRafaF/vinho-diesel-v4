@@ -98,6 +98,8 @@ class LineFollower {
 
     void updateMode();
 
+    float getTurboOffset(float offset);
+
     SensorArray* sensorArray;
     PIDestal* sensorPid;
     PIDestal* gyroPid;
@@ -149,6 +151,7 @@ class LineFollower {
     bool gyroWasCalibrated = false;
 
     bool isOutOfLine = true;
+    unsigned long outOfLineStartingTime = 0;
 
     ControllerType currentController = SENSOR;
 

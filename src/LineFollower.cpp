@@ -139,7 +139,15 @@ float LineFollower::calculateInput(bool sensorsProcessed[N_OF_SENSORS]) {
         const float inputResult = total / float(numberOfActiveSensors);
         lastValidSensorInput = inputResult;
     }
-    isOutOfLine = numberOfActiveSensors == 0 ? true : false;
+
+    if (numberOfActiveSensors == 0) {
+        if (isOutOfLine == false) {
+            isOutOfLine = true;
+            outOfLineStartingTime = millis();
+        }
+    } else {
+        isOutOfLine = false;
+    }
     if (numberOfActiveSensors >= 4 && motorsAreActive) {
         lastCrossingTime = millis();
     }
@@ -165,8 +173,9 @@ void LineFollower::updateMotors() {
     } else {
         pidResult = sensorPidResult * 0.1;
     }
-    leftMotorOutput = motorOffset - pidResult;
-    rightMotorOutput = motorOffset + pidResult;
+    const float turboedMotorOffset = getTurboOffset(motorOffset);
+    leftMotorOutput = turboedMotorOffset - pidResult;
+    rightMotorOutput = turboedMotorOffset + pidResult;
 
     if (leftMotorOutput > motorClamp) leftMotorOutput = motorClamp;
     if (leftMotorOutput < -motorClamp) leftMotorOutput = -motorClamp;
@@ -234,6 +243,7 @@ float LineFollower::calculateSensorReadingError(float error) {
 }
 
 float LineFollower::calculateMotorOffset() {
+    return maxMotorOffset;
     const float minMapRotSpeed = 5.0;
     const float maxMapRotSpeed = 90.0;
     const float constrainedRot = constrain(abs(rotSpeed), minMapRotSpeed, maxMapRotSpeed);
@@ -255,23 +265,27 @@ void LineFollower::triggeredInterrupt(HelperSensorSide sensorSide) {
 
 void LineFollower::updateMode() {
     if (currentMode == SLOW) {
-        minMotorOffset = 0.4;
-        maxMotorOffset = 0.7;
+        minMotorOffset = 0.6;
+        maxMotorOffset = 0.6;
         digitalWrite(led1Pin, LOW);
         digitalWrite(led2Pin, LOW);
     }
     if (currentMode == MEDIUM) {
-        minMotorOffset = 0.7;
-        maxMotorOffset = 1.0;
+        minMotorOffset = 0.4;
+        maxMotorOffset = 0.8;
         digitalWrite(led1Pin, LOW);
         digitalWrite(led2Pin, HIGH);
     }
     if (currentMode == FAST) {
-        minMotorOffset = 0.8;
+        minMotorOffset = 0.4;
         maxMotorOffset = 1.0;
         digitalWrite(led1Pin, HIGH);
         digitalWrite(led2Pin, HIGH);
     }
+}
+
+float LineFollower::getTurboOffset(float offset) {
+    return abs(sensorInput - sensorTarget) < 1 ? offset * 1.2 : offset;
 }
 
 void LineFollower::changeMode(Modes newMode) {
@@ -321,6 +335,10 @@ void LineFollower::run() {
         }
     }
 
+    if (isOutOfLine && millis() - outOfLineStartingTime >= 800) {
+        motorsAreActive = false;
+    }
+
     if (motorsAreActive) {
         const bool processedRightHelper = sensorArray->rightSensProcessed;
         if (!lastRightHelper && processedRightHelper) {
@@ -344,5 +362,5 @@ void LineFollower::run() {
     }
     // printAll();
     // printAll2();
-    delay(10);
+    delay(5);
 }
