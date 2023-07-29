@@ -57,7 +57,7 @@ LineFollower::LineFollower(
 
 void LineFollower::endRun() {
     shouldStop = true;
-    crossedFinishLine = millis();
+    crossedFinishLine = currentTime;
 }
 
 void LineFollower::initialize() {
@@ -95,7 +95,6 @@ void LineFollower::updateButtons() {
 }
 
 bool LineFollower::isButtonPressValid() {
-    unsigned long currentTime = millis();
     if (currentTime > lastPressedButtonTime + 200) {
         lastPressedButtonTime = currentTime;
         return true;
@@ -143,13 +142,13 @@ float LineFollower::calculateInput(bool sensorsProcessed[N_OF_SENSORS]) {
     if (numberOfActiveSensors == 0) {
         if (isOutOfLine == false) {
             isOutOfLine = true;
-            outOfLineStartingTime = millis();
+            outOfLineStartingTime = currentTime;
         }
     } else {
         isOutOfLine = false;
     }
     if (numberOfActiveSensors >= 4 && motorsAreActive) {
-        lastCrossingTime = millis();
+        lastCrossingTime = currentTime;
     }
 
     return lastValidSensorInput;
@@ -163,7 +162,7 @@ float LineFollower::calculateTargetRotSpeed(float error) {
                             ? GYRO
                             : SENSOR;
 
-    return (error * 50);
+    return (error * 70);
 }
 
 void LineFollower::updateMotors() {
@@ -234,10 +233,10 @@ float LineFollower::calculateSensorReadingError(float error) {
     if (error == 0) return 0;
     float absError = abs(error);
     float errorSignal = error / absError;
-    if (absError > 0 && absError <= 1) return error * 1.2;
-    if (absError > 1 && absError <= 2) return error * 1.1;
+    if (absError > 0 && absError <= 1) return error * 1.1;
+    if (absError > 1 && absError <= 2) return error * 1.0;
     if (absError > 2 && absError <= 3) return error * 1.0;
-    if (absError > 3) return error * 0.9;
+    if (absError > 3) return error * 1.0;
 
     return error;
 }
@@ -254,9 +253,11 @@ float LineFollower::calculateMotorOffset() {
 void LineFollower::triggeredInterrupt(HelperSensorSide sensorSide) {
     if (!motorsAreActive || sensorSide == LEFT) return;
 
-    const unsigned int timeNow = millis();
-    if (timeNow - lastCrossingTime >= crossingTimeThreshold) {
+    if (currentTime - lastCrossingTime >= crossingTimeThreshold) {
         numberOfRightSignals++;
+        if (numberOfRightSignals == 1) {
+            crossedStartLine = currentTime;
+        }
         if (numberOfRightSignals >= totalRightSignals) {
             endRun();
         }
@@ -285,7 +286,8 @@ void LineFollower::updateMode() {
 }
 
 float LineFollower::getTurboOffset(float offset) {
-    return abs(sensorInput - sensorTarget) < 1 ? offset * 1.2 : offset;
+    const float adjustedOffset = offset * speedMultiplier;
+    return abs(sensorInput - sensorTarget) < 1 ? offset * 1.5 : offset;
 }
 
 void LineFollower::changeMode(Modes newMode) {
@@ -308,6 +310,7 @@ void LineFollower::run() {
     }
 #endif
     // digitalWrite(led2Pin, motorsAreActive ? HIGH : LOW);
+    currentTime = millis();
     updateButtons();
     if (!gyroWasCalibrated) {
         digitalWrite(led1Pin, HIGH);
@@ -330,12 +333,12 @@ void LineFollower::run() {
 
     motorOffset = calculateMotorOffset();
     if (shouldStop) {
-        if (millis() - crossedFinishLine >= 300) {
+        if (currentTime - crossedFinishLine >= 200) {
             motorsAreActive = false;
         }
     }
 
-    if (isOutOfLine && millis() - outOfLineStartingTime >= 800) {
+    if (isOutOfLine && currentTime - outOfLineStartingTime >= 800) {
         motorsAreActive = false;
     }
 
@@ -360,6 +363,14 @@ void LineFollower::run() {
             motors->coast();
         }
     }
+    /*
+    const unsigned long runTime = currentTime - crossedStartLine;
+    if (runTime > 10000 && runTime < 13000) {
+        speedMultiplier = 0.7;
+    } else {
+        speedMultiplier = 1.0;
+    }
+    */
     // printAll();
     // printAll2();
     delay(5);

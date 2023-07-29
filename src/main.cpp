@@ -72,7 +72,7 @@ Tb6612fng myMotors(
     BIN_2,
     PWM_B);
 
-PIDestal sensorsPid(1.5, 0.001, 12);
+PIDestal sensorsPid(2, 0.001, 16);
 PIDestal gyroPid(0.90, 0.00001, 0.90);
 
 #ifdef USE_BLUETOOTH

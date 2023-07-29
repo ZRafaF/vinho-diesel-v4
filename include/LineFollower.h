@@ -134,6 +134,7 @@ class LineFollower {
     float motorClamp = 1;
     float minMotorOffset = DEFAULT_MIN_MOTOR_OFFSET;
     float maxMotorOffset = DEFAULT_MAX_MOTOR_OFFSET;
+    float speedMultiplier = 1.0;
 
     float rotSpeed;        // Speed of rotation
     float rotSpeedTarget;  // Speed of rotation
@@ -156,10 +157,12 @@ class LineFollower {
     ControllerType currentController = SENSOR;
 
     bool lastRightHelper = false;
+    unsigned long crossedStartLine = 0;
     unsigned long crossedFinishLine = 0;
     bool shouldStop = false;
 
     Modes currentMode = MEDIUM;
+    unsigned long currentTime = 0;
 };
 
 #endif  // LINE_FOLLOWER_H
