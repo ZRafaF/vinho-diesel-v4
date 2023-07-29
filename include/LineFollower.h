@@ -127,7 +127,7 @@ class LineFollower {
 
     // Millis time of the last intersection
     unsigned long lastCrossingTime = 0;
-    uint16_t crossingTimeThreshold = 3000;
+    uint16_t crossingTimeThreshold = 500;
     uint8_t numberOfRightSignals = 0;
     uint8_t totalRightSignals = 2;
 

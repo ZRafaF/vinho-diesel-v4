@@ -147,7 +147,7 @@ float LineFollower::calculateInput(bool sensorsProcessed[N_OF_SENSORS]) {
     } else {
         isOutOfLine = false;
     }
-    if (numberOfActiveSensors >= 4 && motorsAreActive) {
+    if (numberOfActiveSensors >= 6 && motorsAreActive) {
         lastCrossingTime = millis();
     }
 
@@ -272,8 +272,7 @@ void LineFollower::triggeredInterruptFalling(HelperSensorSide sensorSide) {
         return;
     }
     lastInterrupt = timeNow;
-    Serial.println("int");
-    if (timeNow - lastCrossingTime >= crossingTimeThreshold) {
+    if (millis() - lastCrossingTime >= crossingTimeThreshold) {
         numberOfRightSignals++;
         if (numberOfRightSignals >= totalRightSignals) {
             endRun();

@@ -146,11 +146,6 @@ void setup() {
 #endif
     attachInterrupt(LEFT_HELPER_SENS, leftSensInterruptOnLine, HELPER_INTERRUPT_MODE);
     attachInterrupt(RIGHT_HELPER_SENS, rightSensInterruptOnline, HELPER_INTERRUPT_MODE);
-
-    /*
-    attachInterrupt(LEFT_HELPER_SENS, leftSensInterruptOffLine, HELPER_INTERRUPT_MODE_OFFLINE);
-    attachInterrupt(RIGHT_HELPER_SENS, rightSensInterruptOffline, HELPER_INTERRUPT_MODE_OFFLINE);
-    */
 }
 
 void loop() {
