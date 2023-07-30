@@ -18,7 +18,7 @@
 // Remove this to not compile the prints
 #define SERIAL_DEBUG
 
-// #define USE_BLUETOOTH
+#define USE_BLUETOOTH
 
 // Remove this to allow the robot to control the LED array
 #define LED_ALWAYS_ON
