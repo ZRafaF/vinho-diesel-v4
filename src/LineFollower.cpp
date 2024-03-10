@@ -282,20 +282,20 @@ void LineFollower::triggeredInterruptFalling(HelperSensorSide sensorSide) {
 
 void LineFollower::updateMode() {
     if (currentMode == SLOW) {
-        minMotorOffset = 0.6;
-        maxMotorOffset = 0.6;
+        minMotorOffset = 0.0;
+        maxMotorOffset = 0.1;
         digitalWrite(led1Pin, LOW);
         digitalWrite(led2Pin, LOW);
     }
     if (currentMode == MEDIUM) {
-        minMotorOffset = 0.4;
-        maxMotorOffset = 0.8;
+        minMotorOffset = 0.0;
+        maxMotorOffset = 0.2;
         digitalWrite(led1Pin, LOW);
         digitalWrite(led2Pin, HIGH);
     }
     if (currentMode == FAST) {
-        minMotorOffset = 0.7;
-        maxMotorOffset = 1.0;
+        minMotorOffset = 0.1;
+        maxMotorOffset = 0.4;
         digitalWrite(led1Pin, HIGH);
         digitalWrite(led2Pin, HIGH);
     }
@@ -320,9 +320,15 @@ void LineFollower::changeMode(Modes newMode) {
 void LineFollower::run() {
 #ifdef USE_BLUETOOTH
     remotePid->process();
-    if (remotePid->getExtraInfo()[0] == "a"[0]) {
+    Serial.println(remotePid->getExtraInfo());
+    auto extraInfo = remotePid->getExtraInfo();
+    if (extraInfo[0] == 'a') {
         toggleMotorsAreActive();
         remotePid->setExtraInfo("b");
+    }
+    if (isDigit(extraInfo[0])) {
+        targetRuntimeSeconds = String(extraInfo).toFloat();
+        remotePid->setExtraInfo("Time: " + String(targetRuntimeSeconds, 2) + "s");
     }
 #endif
     // digitalWrite(led2Pin, motorsAreActive ? HIGH : LOW);
@@ -348,9 +354,8 @@ void LineFollower::run() {
 
     motorOffset = calculateMotorOffset();
     if (shouldStop) {
-        if (millis() - crossedFinishLine >= 200) {
-            motorsAreActive = false;
-        }
+        motorsAreActive = false;
+        doOnceStart = true;
     }
     /*
     if (isOutOfLine && millis() - outOfLineStartingTime >= 800) {
@@ -361,7 +366,10 @@ void LineFollower::run() {
     if (motorsAreActive) {
         if (doOnceStart) {
             doOnceStart = false;
+            startingTime = millis();
         }
+        if (startingTime > 0 && millis() - startingTime >= targetRuntimeSeconds * 1000)
+            endRun();
         const bool processedRightHelper = sensorArray->rightSensProcessed;
         if (!lastRightHelper && processedRightHelper) {
             lastRightHelper = processedRightHelper;

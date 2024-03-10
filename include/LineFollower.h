@@ -24,7 +24,7 @@
 #include "SensorArray.h"
 #include "TB6612FNG.h"
 
-#define DEFAULT_MIN_MOTOR_OFFSET 0.7
+#define DEFAULT_MIN_MOTOR_OFFSET 0.0
 #define DEFAULT_MAX_MOTOR_OFFSET 1.0
 
 float invertedMap(float input, float inMin, float inMax, float outMin, float outMax);
@@ -129,10 +129,10 @@ class LineFollower {
     unsigned long lastCrossingTime = 0;
     uint16_t crossingTimeThreshold = 500;
     uint8_t numberOfRightSignals = 0;
-    uint8_t totalRightSignals = 2;
+    uint8_t totalRightSignals = 255;
 
-    float motorOffset = 0.5;
-    float motorClamp = 1;
+    float motorOffset = 0.1;
+    float motorClamp = 0.6;
     float minMotorOffset = DEFAULT_MIN_MOTOR_OFFSET;
     float maxMotorOffset = DEFAULT_MAX_MOTOR_OFFSET;
     float speedMultiplier = 1.0;
@@ -140,6 +140,10 @@ class LineFollower {
     float rotSpeed;        // Speed of rotation
     float rotSpeedTarget;  // Speed of rotation
     float rotSpeedThreshold = 90.0f;
+
+    unsigned long startingTime = 0;
+
+    float targetRuntimeSeconds = 5.0f;
 
     uint8_t
         led1Pin,
